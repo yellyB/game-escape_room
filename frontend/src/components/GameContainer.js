@@ -5,6 +5,8 @@ import phoneIcon from '../images/icon_phone.png';
 export default function GameContainer() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [selectedChat, setSelectedChat] = useState(null);
+  const [isMonologueOpen, setIsMonologueOpen] = useState(false);
+  const [currentMonologueIndex, setCurrentMonologueIndex] = useState(0);
 
   const handlePhoneClick = () => {
     setIsChatOpen(!isChatOpen);
@@ -20,6 +22,30 @@ export default function GameContainer() {
   const handleBackToList = () => {
     setSelectedChat(null);
   };
+
+  const handleScreenClick = () => {
+    if (isMonologueOpen) {
+      if (currentMonologueIndex < monologueTexts.length - 1) {
+        setCurrentMonologueIndex(currentMonologueIndex + 1);
+      } else {
+        setIsMonologueOpen(false);
+        setCurrentMonologueIndex(0);
+      }
+    }
+  };
+
+  const startMonologue = () => {
+    setIsMonologueOpen(true);
+    setCurrentMonologueIndex(0);
+  };
+
+  const monologueTexts = [
+    "여기는... 어디지?",
+    "분명히 집에서 잠들었는데...",
+    "이상한 곳에 와버렸네. 이곳은 정말 이상한 곳이다. 어디서부터 어디까지가 현실이고 꿈인지 구분이 안 된다.",
+    "뭔가 무서운 기분이 든다. 이곳의 분위기가 너무 어둡고 조용해서 가슴이 두근거린다.",
+    "일단 주변을 둘러봐야겠어. 이곳에서 나갈 방법을 찾아야 한다."
+  ];
 
   const chatRooms = [
     { id: 'room1', name: '게임 관리자', lastMessage: '안녕하세요! 도움이 필요하시면...', time: '오후 2:30', unread: 2 },
@@ -47,13 +73,16 @@ export default function GameContainer() {
   };
 
   return (
-    <GameContainerWrapper>
+    <GameContainerWrapper onClick={handleScreenClick}>
       <BottomFixedArea>
         <PhoneIcon 
           src={phoneIcon} 
           alt="Phone Icon" 
           onClick={handlePhoneClick}
         />
+        <MonologueButton onClick={startMonologue}>
+          💭
+        </MonologueButton>
       </BottomFixedArea>
       
       {isChatOpen && (
@@ -109,6 +138,19 @@ export default function GameContainer() {
             )}
           </ChatContent>
         </ChatWindow>
+      )}
+      
+      {isMonologueOpen && (
+        <MonologueOverlay>
+          <MonologueBox>
+            <MonologueText>
+              {monologueTexts[currentMonologueIndex]}
+            </MonologueText>
+            <MonologueProgress>
+              {currentMonologueIndex + 1} / {monologueTexts.length}
+            </MonologueProgress>
+          </MonologueBox>
+        </MonologueOverlay>
       )}
     </GameContainerWrapper>
   );
@@ -341,4 +383,67 @@ const SendButton = styled.button`
   &:hover {
     background: #5a6fd8;
   }
+`;
+
+const MonologueButton = styled.button`
+  width: 40px;
+  height: 40px;
+  background: #28a745;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 20px;
+  margin-left: 10px;
+  transition: opacity 0.3s;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+`;
+
+const MonologueOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+`;
+
+const MonologueBox = styled.div`
+  background: #1a1a1a;
+  border: 2px solid #333;
+  border-radius: 15px;
+  padding: 30px;
+  width: 80%;
+  max-width: 600px;
+  min-height: 200px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+`;
+
+const MonologueText = styled.div`
+  color: white;
+  font-size: 18px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  font-weight: 500;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+`;
+
+const MonologueProgress = styled.div`
+  color: #888;
+  font-size: 14px;
 `;
