@@ -1,13 +1,12 @@
 import React from 'react';
 import styled from 'styled-components';
-import colors from '../styles/colors';
+import colors from '../../styles/colors';
+import ChatHeader from './ChatHeader';
 
 export default function ChatList({ chatRooms, onChatSelect }) {
   return (
     <ChatListContainer>
-      <ChatHeader>
-        <ChatTitle>채팅방 목록</ChatTitle>
-      </ChatHeader>
+      <ChatHeader title="채팅방 목록" />
       <ChatContent>
         <ChatRoomList>
           {chatRooms.map(room => (
@@ -45,29 +44,14 @@ const ChatListContainer = styled.div`
   flex-direction: column;
 `;
 
-const ChatHeader = styled.div`
-  background: ${colors.darkGray};
-  padding: 20px;
-  border-bottom: 1px solid ${colors.lightGray};
-  flex-shrink: 0;
-`;
-
-const ChatTitle = styled.h2`
-  color: ${colors.white};
-  margin: 0;
-  font-size: 20px;
-`;
-
 const ChatContent = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
 `;
 
 const ChatRoomList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 15px;
 `;
 
 const ChatRoomItem = styled.div`
@@ -75,21 +59,13 @@ const ChatRoomItem = styled.div`
     props.hasUnread ? colors.primarySecondary : colors.darkGray};
   border: ${props =>
     props.hasUnread ? 'none' : `1px solid ${colors.primarySecondary}`};
-  border-radius: 10px;
-  padding: 15px;
+  padding: 10px 24px;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 18px;
   min-height: 60px;
-
-  &:hover {
-    background: ${props =>
-      props.hasUnread ? colors.primarySecondary : colors.lightGray};
-    border-color: ${props =>
-      props.hasUnread ? 'transparent' : colors.lightGray};
-  }
 `;
 
 const RoomAvatar = styled.div`
@@ -140,10 +116,10 @@ const RoomTime = styled.div`
 const UnreadBadge = styled.div`
   background: ${colors.primary};
   color: ${colors.white};
-  border-radius: 12px;
-  padding: 4px 8px;
-  min-width: 20px;
-  height: 20px;
+  border-radius: 8px;
+  padding: 0px 8px;
+  min-width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;

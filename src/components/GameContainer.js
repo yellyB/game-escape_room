@@ -3,8 +3,8 @@ import styled from 'styled-components';
 import phoneIcon from '../images/icon_phone.png';
 import backgroundImage from '../images/background.png';
 import { chapterUtils, loadChapterProgress } from '../data/monologues';
-import ChatList from './ChatList';
-import ChatRoom from './ChatRoom';
+import ChatList from './chat/ChatList';
+import ChatRoom from './chat/ChatRoom';
 import '../utils/debug'; // 개발자 디버그 기능 로드
 
 export default function GameContainer() {
