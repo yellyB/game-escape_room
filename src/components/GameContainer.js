@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import phoneIcon from '../images/icon_phone.png';
 import backgroundImage from '../images/background.png';
+import playerImage from '../images/player.png';
 import { chapterUtils, loadChapterProgress } from '../data/monologues';
 import ChatList from './chat/ChatList';
 import ChatRoom from './chat/ChatRoom';
@@ -17,7 +18,7 @@ export default function GameContainer() {
   const handlePhoneClick = () => {
     setIsChatOpen(!isChatOpen);
     if (isChatOpen) {
-      setSelectedChat(null); // 채팅창 닫을 때 선택된 채팅 초기화
+      setSelectedChat(null);
     }
   };
 
@@ -30,7 +31,6 @@ export default function GameContainer() {
   };
 
   const handleSendMessage = (chatId, message) => {
-    // 메시지 전송 로직 (로컬 스토리지에 저장)
     const messages = JSON.parse(localStorage.getItem(`chat_${chatId}`) || '[]');
     const newMessage = {
       text: message,
@@ -193,9 +193,12 @@ export default function GameContainer() {
       {isMonologueOpen && currentChapter && (
         <MonologueOverlay>
           <MonologueBox>
-            <MonologueText>
-              {currentChapter.monologue[currentMonologueIndex]}
-            </MonologueText>
+            <MonologueContent>
+              <PlayerImage src={playerImage} alt="Player" />
+              <MonologueText>
+                {currentChapter.monologue[currentMonologueIndex]}
+              </MonologueText>
+            </MonologueContent>
             <MonologueProgress>
               {currentMonologueIndex + 1} / {currentChapter.monologue.length}
             </MonologueProgress>
@@ -281,8 +284,9 @@ const MonologueOverlay = styled.div`
   bottom: 0;
   background: rgba(0, 0, 0, 0.8);
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
+  padding-bottom: 100px;
   z-index: 2000;
 `;
 
@@ -301,16 +305,28 @@ const MonologueBox = styled.div`
   justify-content: center;
 `;
 
+const MonologueContent = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 20px;
+`;
+
+const PlayerImage = styled.img`
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+`;
+
 const MonologueText = styled.div`
   color: white;
   font-size: 18px;
   line-height: 1.6;
-  margin-bottom: 20px;
   font-weight: 500;
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  text-align: left;
   word-wrap: break-word;
   overflow-wrap: break-word;
 `;

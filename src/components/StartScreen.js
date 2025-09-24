@@ -3,31 +3,22 @@ import styled from 'styled-components';
 
 export default function StartScreen({ onStartGame }) {
   return (
-    <AppContainer>
-      <StartContainer>
-        <StartButton onClick={onStartGame}>방에서 나가기</StartButton>
-      </StartContainer>
-    </AppContainer>
+    <Container>
+      <StartButton onClick={onStartGame}>방에서 나가기</StartButton>
+    </Container>
   );
 }
 
-const AppContainer = styled.div`
+const Container = styled.div`
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   font-family: 'Arial', sans-serif;
   padding: 1rem;
   box-sizing: border-box;
-`;
-
-const StartContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
   text-align: center;
 `;
 
