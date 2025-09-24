@@ -9,23 +9,23 @@ window.debugGame = {
     console.log('현재 챕터:', chapter);
     return chapter;
   },
-  
+
   // 모든 챕터 목록 보기
   getAllChapters: () => {
     const chapters = chapterUtils.getAllChapters();
     console.log('모든 챕터:', chapters);
     return chapters;
   },
-  
+
   // 진행률 보기
   getProgress: () => {
     const progress = chapterUtils.getProgress();
     console.log(`진행률: ${progress}%`);
     return progress;
   },
-  
+
   // 특정 챕터로 이동
-  goToChapter: (chapterId) => {
+  goToChapter: chapterId => {
     const success = chapterUtils.goToChapter(chapterId);
     if (success) {
       console.log(`챕터 ${chapterId}로 이동 완료`);
@@ -35,14 +35,14 @@ window.debugGame = {
     }
     return success;
   },
-  
+
   // 진행 상황 초기화
   resetProgress: () => {
     chapterUtils.resetProgress();
     console.log('진행 상황 초기화 완료');
     window.location.reload();
   },
-  
+
   // 다음 챕터로 이동
   nextChapter: () => {
     const success = chapterUtils.goToNextChapter();
@@ -54,7 +54,7 @@ window.debugGame = {
     }
     return success;
   },
-  
+
   // 도움말
   help: () => {
     console.log(`
@@ -72,7 +72,7 @@ debugGame.help() - 이 도움말 보기
 debugGame.goToChapter('discover')
 debugGame.resetProgress()
     `);
-  }
+  },
 };
 
 // 개발 환경에서만 콘솔에 안내 메시지 표시

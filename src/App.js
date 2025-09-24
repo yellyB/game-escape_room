@@ -1,11 +1,14 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useNavigate,
+} from 'react-router-dom';
 import styled from 'styled-components';
 import StartScreen from './components/StartScreen';
 import GameContainer from './components/GameContainer';
 import './App.css';
-
-
 
 function AppContent() {
   const navigate = useNavigate();
@@ -14,14 +17,16 @@ function AppContent() {
     navigate('/game');
   };
 
-
   return (
     <Routes>
-      <Route path="/" element={
-        <AppContainer>
-          <StartScreen onStartGame={handleStartGame} />
-        </AppContainer>
-      } />
+      <Route
+        path="/"
+        element={
+          <AppContainer>
+            <StartScreen onStartGame={handleStartGame} />
+          </AppContainer>
+        }
+      />
       <Route path="/game" element={<GameContainer />} />
     </Routes>
   );
@@ -36,7 +41,6 @@ function App() {
 }
 
 export default App;
-
 
 const AppContainer = styled.div`
   min-height: 100vh;

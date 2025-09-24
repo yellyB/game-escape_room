@@ -10,9 +10,9 @@ export default function ChatList({ chatRooms, onChatSelect }) {
       </ChatHeader>
       <ChatContent>
         <ChatRoomList>
-          {chatRooms.map((room) => (
-            <ChatRoomItem 
-              key={room.id} 
+          {chatRooms.map(room => (
+            <ChatRoomItem
+              key={room.id}
               onClick={() => onChatSelect(room.id)}
               hasUnread={room.unread > 0}
             >
@@ -71,8 +71,10 @@ const ChatRoomList = styled.div`
 `;
 
 const ChatRoomItem = styled.div`
-  background: ${props => props.hasUnread ? colors.primarySecondary : colors.darkGray};
-  border: ${props => props.hasUnread ? 'none' : `1px solid ${colors.primarySecondary}`};
+  background: ${props =>
+    props.hasUnread ? colors.primarySecondary : colors.darkGray};
+  border: ${props =>
+    props.hasUnread ? 'none' : `1px solid ${colors.primarySecondary}`};
   border-radius: 10px;
   padding: 15px;
   cursor: pointer;
@@ -81,10 +83,12 @@ const ChatRoomItem = styled.div`
   align-items: center;
   gap: 15px;
   min-height: 60px;
-  
+
   &:hover {
-    background: ${props => props.hasUnread ? colors.primarySecondary : colors.lightGray};
-    border-color: ${props => props.hasUnread ? 'transparent' : colors.lightGray};
+    background: ${props =>
+      props.hasUnread ? colors.primarySecondary : colors.lightGray};
+    border-color: ${props =>
+      props.hasUnread ? 'transparent' : colors.lightGray};
   }
 `;
 

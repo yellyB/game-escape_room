@@ -21,7 +21,7 @@ export default function GameContainer() {
     }
   };
 
-  const handleChatSelect = (chatId) => {
+  const handleChatSelect = chatId => {
     setSelectedChat(chatId);
   };
 
@@ -35,7 +35,7 @@ export default function GameContainer() {
     const newMessage = {
       text: message,
       isOwn: true,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
     messages.push(newMessage);
     localStorage.setItem(`chat_${chatId}`, JSON.stringify(messages));
@@ -48,12 +48,12 @@ export default function GameContainer() {
       } else {
         // 독백이 끝나면 챕터 완료 처리
         chapterUtils.completeChapter(currentChapter.id);
-        
+
         // 다음 챕터로 진행
         if (chapterUtils.goToNextChapter()) {
           setCurrentChapter(chapterUtils.getCurrentChapter());
         }
-        
+
         setIsMonologueOpen(false);
         setCurrentMonologueIndex(0);
       }
@@ -73,7 +73,7 @@ export default function GameContainer() {
     setIsMonologueOpen(false);
     setIsChatOpen(false);
     setSelectedChat(null);
-    
+
     // 페이지 새로고침으로 완전 초기화
     window.location.reload();
   };
@@ -90,55 +90,90 @@ export default function GameContainer() {
   }, [currentChapter]);
 
   const chatRooms = [
-    { id: 'room1', name: '게임 관리자', lastMessage: '안녕하세요! 도움이 필요하시면...', time: '오후 2:30', unread: 2 },
-    { id: 'room2', name: '플레이어1', lastMessage: '게임 재미있네요!', time: '오후 2:25', unread: 0 },
-    { id: 'room3', name: '플레이어2', lastMessage: '다음에 또 같이 해요', time: '오후 2:20', unread: 1 },
+    {
+      id: 'room1',
+      name: '게임 관리자',
+      lastMessage: '안녕하세요! 도움이 필요하시면...',
+      time: '오후 2:30',
+      unread: 2,
+    },
+    {
+      id: 'room2',
+      name: '플레이어1',
+      lastMessage: '게임 재미있네요!',
+      time: '오후 2:25',
+      unread: 0,
+    },
+    {
+      id: 'room3',
+      name: '플레이어2',
+      lastMessage: '다음에 또 같이 해요',
+      time: '오후 2:20',
+      unread: 1,
+    },
   ];
 
-  const getChatMessages = (chatId) => {
+  const getChatMessages = chatId => {
     // 로컬 스토리지에서 메시지 불러오기
-    const savedMessages = JSON.parse(localStorage.getItem(`chat_${chatId}`) || '[]');
-    
+    const savedMessages = JSON.parse(
+      localStorage.getItem(`chat_${chatId}`) || '[]'
+    );
+
     // 기본 메시지가 없으면 초기 메시지 추가
     if (savedMessages.length === 0) {
       const defaultMessages = {
         room1: [
-          { text: '안녕하세요! 게임에 오신 것을 환영합니다.', isOwn: false, timestamp: Date.now() - 10000 },
-          { text: '도움이 필요하시면 언제든 말씀해주세요.', isOwn: false, timestamp: Date.now() - 9000 },
+          {
+            text: '안녕하세요! 게임에 오신 것을 환영합니다.',
+            isOwn: false,
+            timestamp: Date.now() - 10000,
+          },
+          {
+            text: '도움이 필요하시면 언제든 말씀해주세요.',
+            isOwn: false,
+            timestamp: Date.now() - 9000,
+          },
         ],
         room2: [
-          { text: '게임 재미있네요!', isOwn: false, timestamp: Date.now() - 8000 },
+          {
+            text: '게임 재미있네요!',
+            isOwn: false,
+            timestamp: Date.now() - 8000,
+          },
         ],
         room3: [
-          { text: '다음에 또 같이 해요', isOwn: false, timestamp: Date.now() - 7000 },
+          {
+            text: '다음에 또 같이 해요',
+            isOwn: false,
+            timestamp: Date.now() - 7000,
+          },
         ],
       };
       const initialMessages = defaultMessages[chatId] || [];
       localStorage.setItem(`chat_${chatId}`, JSON.stringify(initialMessages));
       return initialMessages;
     }
-    
+
     return savedMessages;
   };
 
   return (
-    <GameContainerWrapper onClick={handleScreenClick} backgroundImage={backgroundImage}>
+    <GameContainerWrapper
+      onClick={handleScreenClick}
+      backgroundImage={backgroundImage}
+    >
       <BottomFixedArea>
-        <PhoneIcon 
-          src={phoneIcon} 
-          alt="Phone Icon" 
+        <PhoneIcon
+          src={phoneIcon}
+          alt="Phone Icon"
           onClick={handlePhoneClick}
         />
-        <MonologueButton onClick={startMonologue}>
-          💭
-        </MonologueButton>
-        <ResetButton onClick={handleResetGame}>
-          🔄
-        </ResetButton>
+        <MonologueButton onClick={startMonologue}>💭</MonologueButton>
+        <ResetButton onClick={handleResetGame}>🔄</ResetButton>
       </BottomFixedArea>
-      
-      {isChatOpen && (
-        selectedChat ? (
+
+      {isChatOpen &&
+        (selectedChat ? (
           <ChatRoom
             chatId={selectedChat}
             messages={getChatMessages(selectedChat)}
@@ -146,25 +181,21 @@ export default function GameContainer() {
             onSendMessage={handleSendMessage}
           />
         ) : (
-          <ChatList
-            chatRooms={chatRooms}
-            onChatSelect={handleChatSelect}
-          />
-        )
+          <ChatList chatRooms={chatRooms} onChatSelect={handleChatSelect} />
+        ))}
+
+      {isMonologueOpen && currentChapter && (
+        <MonologueOverlay>
+          <MonologueBox>
+            <MonologueText>
+              {currentChapter.monologue[currentMonologueIndex]}
+            </MonologueText>
+            <MonologueProgress>
+              {currentMonologueIndex + 1} / {currentChapter.monologue.length}
+            </MonologueProgress>
+          </MonologueBox>
+        </MonologueOverlay>
       )}
-      
-             {isMonologueOpen && currentChapter && (
-               <MonologueOverlay>
-                 <MonologueBox>
-                   <MonologueText>
-                     {currentChapter.monologue[currentMonologueIndex]}
-                   </MonologueText>
-                   <MonologueProgress>
-                     {currentMonologueIndex + 1} / {currentChapter.monologue.length}
-                   </MonologueProgress>
-                 </MonologueBox>
-               </MonologueOverlay>
-             )}
     </GameContainerWrapper>
   );
 }
@@ -198,12 +229,11 @@ const PhoneIcon = styled.img`
   width: 40px;
   cursor: pointer;
   transition: opacity 0.3s;
-  
+
   &:hover {
     opacity: 0.8;
   }
 `;
-
 
 const MonologueButton = styled.button`
   width: 40px;
@@ -215,7 +245,7 @@ const MonologueButton = styled.button`
   font-size: 20px;
   margin-left: 10px;
   transition: opacity 0.3s;
-  
+
   &:hover {
     opacity: 0.8;
   }
@@ -231,7 +261,7 @@ const ResetButton = styled.button`
   font-size: 20px;
   margin-left: 10px;
   transition: opacity 0.3s;
-  
+
   &:hover {
     opacity: 0.8;
   }
@@ -259,7 +289,7 @@ const MonologueBox = styled.div`
   max-width: 600px;
   min-height: 200px;
   text-align: center;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
   justify-content: center;

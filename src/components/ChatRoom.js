@@ -32,7 +32,7 @@ const BackButton = styled.button`
   padding: 5px;
   border-radius: 5px;
   transition: background 0.3s ease;
-  
+
   &:hover {
     background: #333;
   }
@@ -54,12 +54,12 @@ const ChatContent = styled.div`
 `;
 
 const MessageBubble = styled.div`
-  background: ${props => props.isOwn ? '#007bff' : '#2a2a2a'};
+  background: ${props => (props.isOwn ? '#007bff' : '#2a2a2a')};
   color: white;
   padding: 12px 16px;
   border-radius: 18px;
   max-width: 70%;
-  align-self: ${props => props.isOwn ? 'flex-end' : 'flex-start'};
+  align-self: ${props => (props.isOwn ? 'flex-end' : 'flex-start')};
   word-wrap: break-word;
 `;
 
@@ -85,12 +85,12 @@ const InputField = styled.textarea`
   max-height: 100px;
   font-family: inherit;
   line-height: 1.4;
-  
+
   &:focus {
     outline: none;
     border-color: #007bff;
   }
-  
+
   &::placeholder {
     color: #888;
   }
@@ -105,23 +105,18 @@ const SendButton = styled.button`
   cursor: pointer;
   font-size: 14px;
   transition: background 0.3s ease;
-  
+
   &:hover {
     background: #0056b3;
   }
-  
+
   &:disabled {
     background: #333;
     cursor: not-allowed;
   }
 `;
 
-export default function ChatRoom({ 
-  chatId, 
-  messages, 
-  onBack, 
-  onSendMessage 
-}) {
+export default function ChatRoom({ chatId, messages, onBack, onSendMessage }) {
   const [inputMessage, setInputMessage] = useState('');
   const messagesEndRef = useRef(null);
 
@@ -140,7 +135,7 @@ export default function ChatRoom({
     }
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = e => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -153,7 +148,7 @@ export default function ChatRoom({
         <BackButton onClick={onBack}>←</BackButton>
         <ChatTitle>채팅방</ChatTitle>
       </ChatHeader>
-      
+
       <ChatContent>
         {messages.map((message, index) => (
           <MessageBubble key={index} isOwn={message.isOwn}>
@@ -162,11 +157,11 @@ export default function ChatRoom({
         ))}
         <div ref={messagesEndRef} />
       </ChatContent>
-      
+
       <MessageInput>
         <InputField
           value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
+          onChange={e => setInputMessage(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder="메시지를 입력하세요..."
           rows={1}

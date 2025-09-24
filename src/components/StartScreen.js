@@ -23,12 +23,12 @@ const StartButton = styled.button`
   touch-action: manipulation;
   min-height: 80px;
   min-width: 200px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+
   &:hover {
     transform: translateY(-5px);
   }
-  
+
   &:active {
     transform: translateY(0);
   }
@@ -37,9 +37,7 @@ const StartButton = styled.button`
 function StartScreen({ onStartGame }) {
   return (
     <StartContainer>
-      <StartButton onClick={onStartGame}>
-        방에서 나가기
-      </StartButton>
+      <StartButton onClick={onStartGame}>방에서 나가기</StartButton>
     </StartContainer>
   );
 }
