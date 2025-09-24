@@ -1,6 +1,27 @@
 import React from 'react';
 import styled from 'styled-components';
 
+export default function StartScreen({ onStartGame }) {
+  return (
+    <AppContainer>
+      <StartContainer>
+        <StartButton onClick={onStartGame}>방에서 나가기</StartButton>
+      </StartContainer>
+    </AppContainer>
+  );
+}
+
+const AppContainer = styled.div`
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Arial', sans-serif;
+  padding: 1rem;
+  box-sizing: border-box;
+`;
+
 const StartContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -33,13 +54,3 @@ const StartButton = styled.button`
     transform: translateY(0);
   }
 `;
-
-function StartScreen({ onStartGame }) {
-  return (
-    <StartContainer>
-      <StartButton onClick={onStartGame}>방에서 나가기</StartButton>
-    </StartContainer>
-  );
-}
-
-export default StartScreen;
