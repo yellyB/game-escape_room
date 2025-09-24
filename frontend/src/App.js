@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import GameLobby from './components/GameLobby';
+import StartScreen from './components/StartScreen';
 import GameRoom from './components/GameRoom';
 import './App.css';
 
@@ -15,6 +16,14 @@ const AppContainer = styled.div`
   box-sizing: border-box;
 `;
 
+const GameContainer = styled.div`
+  min-height: 100vh;
+  background: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
 const Title = styled.h1`
   color: white;
   text-align: center;
@@ -23,34 +32,38 @@ const Title = styled.h1`
   text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 `;
 
-function App() {
-  const [currentView, setCurrentView] = useState('lobby');
-  const [gameData, setGameData] = useState(null);
+function AppContent() {
+  const navigate = useNavigate();
 
-  const handleJoinGame = (roomId, playerName) => {
-    setGameData({ roomId, playerName });
-    setCurrentView('game');
+  const handleStartGame = () => {
+    navigate('/game');
   };
 
-  const handleBackToLobby = () => {
-    setCurrentView('lobby');
-    setGameData(null);
+  const handleBackToStart = () => {
+    navigate('/');
   };
 
   return (
-    <AppContainer>
-      <div>
-        <Title>🎮 Escape Game</Title>
-        {currentView === 'lobby' ? (
-          <GameLobby onJoinGame={handleJoinGame} />
-        ) : (
-          <GameRoom 
-            gameData={gameData} 
-            onBackToLobby={handleBackToLobby} 
-          />
-        )}
-      </div>
-    </AppContainer>
+    <Routes>
+      <Route path="/" element={
+        <AppContainer>
+          <StartScreen onStartGame={handleStartGame} />
+        </AppContainer>
+      } />
+      <Route path="/game" element={
+        <GameContainer>
+          {/* 까만 배경만 표시 */}
+        </GameContainer>
+      } />
+    </Routes>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
   );
 }
 

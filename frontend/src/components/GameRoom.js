@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 
 const GameContainer = styled.div`
-  background: rgba(255, 255, 255, 0.95);
+  background: #000000;
   padding: 1rem;
   border-radius: 15px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.3);
@@ -10,6 +10,7 @@ const GameContainer = styled.div`
   max-width: 400px;
   margin: 0 auto;
   min-height: 500px;
+  color: white;
 `;
 
 const GameHeader = styled.div`
@@ -24,7 +25,7 @@ const GameHeader = styled.div`
 const RoomInfo = styled.div`
   font-size: 1rem;
   font-weight: bold;
-  color: #667eea;
+  color: #ffffff;
   text-align: center;
 `;
 
@@ -55,8 +56,8 @@ const GameArea = styled.div`
 `;
 
 const GameCanvas = styled.div`
-  background: #f8f9fa;
-  border: 2px solid #ddd;
+  background: #1a1a1a;
+  border: 2px solid #333;
   border-radius: 10px;
   padding: 1rem;
   display: flex;
@@ -64,31 +65,34 @@ const GameCanvas = styled.div`
   align-items: center;
   justify-content: center;
   min-height: 200px;
+  color: white;
 `;
 
 const PlayerList = styled.div`
-  background: #f8f9fa;
-  border: 2px solid #ddd;
+  background: #1a1a1a;
+  border: 2px solid #333;
   border-radius: 10px;
   padding: 1rem;
   margin-top: 1rem;
+  color: white;
 `;
 
 const PlayerItem = styled.div`
   padding: 0.5rem;
   margin-bottom: 0.5rem;
-  background: white;
+  background: #333;
   border-radius: 5px;
   border-left: 4px solid #667eea;
+  color: white;
 `;
 
 const GameMessage = styled.div`
-  background: #e3f2fd;
+  background: #333;
   padding: 1rem;
   border-radius: 8px;
   margin-top: 1rem;
   text-align: center;
-  color: #1976d2;
+  color: #ffffff;
 `;
 
 const ActionButton = styled.button`
@@ -175,7 +179,7 @@ const ControlButton = styled.button`
   } /* 상호작용 */
 `;
 
-function GameRoom({ gameData, onBackToLobby }) {
+function GameRoom({ onBackToStart }) {
   const [ws, setWs] = useState(null);
   const [players, setPlayers] = useState([]);
   const [gameStatus, setGameStatus] = useState('connecting');
@@ -183,10 +187,10 @@ function GameRoom({ gameData, onBackToLobby }) {
   const wsRef = useRef(null);
 
   useEffect(() => {
-    if (!gameData) return;
-
     // WebSocket 연결
-    const websocket = new WebSocket(`ws://localhost:8000/ws/${gameData.roomId}`);
+    const roomId = 'default-room';
+    const playerName = 'Player';
+    const websocket = new WebSocket(`ws://localhost:8000/ws/${roomId}`);
     wsRef.current = websocket;
 
     websocket.onopen = () => {
@@ -195,7 +199,7 @@ function GameRoom({ gameData, onBackToLobby }) {
       
       // 플레이어 정보 전송
       websocket.send(JSON.stringify({
-        player_name: gameData.playerName
+        player_name: playerName
       }));
     };
 
@@ -237,7 +241,7 @@ function GameRoom({ gameData, onBackToLobby }) {
         websocket.close();
       }
     };
-  }, [gameData]);
+  }, []);
 
   const sendGameAction = (action, data = {}) => {
     if (ws && ws.readyState === WebSocket.OPEN) {
@@ -261,10 +265,10 @@ function GameRoom({ gameData, onBackToLobby }) {
     <GameContainer>
       <GameHeader>
         <RoomInfo>
-          🎮 방 ID: {gameData?.roomId} | 플레이어: {gameData?.playerName}
+          🎮 방 ID: default-room | 플레이어: Player
         </RoomInfo>
-        <BackButton onClick={onBackToLobby}>
-          ← 로비로 돌아가기
+        <BackButton onClick={onBackToStart}>
+          ← 방에서 나가기
         </BackButton>
       </GameHeader>
 
@@ -294,7 +298,7 @@ function GameRoom({ gameData, onBackToLobby }) {
           <h4>👥 플레이어 목록 ({players.length}명)</h4>
           {players.map((player, index) => (
             <PlayerItem key={index}>
-              {player.name} {player.id === gameData?.playerId ? '(나)' : ''}
+              {player.name} {player.name === 'Player' ? '(나)' : ''}
             </PlayerItem>
           ))}
           
