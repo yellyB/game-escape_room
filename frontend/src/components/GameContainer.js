@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import phoneIcon from '../images/icon_phone.png';
+import {  chapterUtils, loadChapterProgress } from '../data/monologues';
+import '../utils/debug'; // 개발자 디버그 기능 로드
 
 export default function GameContainer() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [selectedChat, setSelectedChat] = useState(null);
   const [isMonologueOpen, setIsMonologueOpen] = useState(false);
   const [currentMonologueIndex, setCurrentMonologueIndex] = useState(0);
+  const [currentChapter, setCurrentChapter] = useState(null);
 
   const handlePhoneClick = () => {
     setIsChatOpen(!isChatOpen);
@@ -24,10 +27,18 @@ export default function GameContainer() {
   };
 
   const handleScreenClick = () => {
-    if (isMonologueOpen) {
-      if (currentMonologueIndex < monologueTexts.length - 1) {
+    if (isMonologueOpen && currentChapter) {
+      if (currentMonologueIndex < currentChapter.monologue.length - 1) {
         setCurrentMonologueIndex(currentMonologueIndex + 1);
       } else {
+        // 독백이 끝나면 챕터 완료 처리
+        chapterUtils.completeChapter(currentChapter.id);
+        
+        // 다음 챕터로 진행
+        if (chapterUtils.goToNextChapter()) {
+          setCurrentChapter(chapterUtils.getCurrentChapter());
+        }
+        
         setIsMonologueOpen(false);
         setCurrentMonologueIndex(0);
       }
@@ -39,13 +50,29 @@ export default function GameContainer() {
     setCurrentMonologueIndex(0);
   };
 
-  const monologueTexts = [
-    "여기는... 어디지?",
-    "분명히 집에서 잠들었는데...",
-    "이상한 곳에 와버렸네. 이곳은 정말 이상한 곳이다. 어디서부터 어디까지가 현실이고 꿈인지 구분이 안 된다.",
-    "뭔가 무서운 기분이 든다. 이곳의 분위기가 너무 어둡고 조용해서 가슴이 두근거린다.",
-    "일단 주변을 둘러봐야겠어. 이곳에서 나갈 방법을 찾아야 한다."
-  ];
+  const handleResetGame = () => {
+    // 게임 데이터 초기화
+    chapterUtils.resetProgress();
+    setCurrentChapter(chapterUtils.getCurrentChapter());
+    setCurrentMonologueIndex(0);
+    setIsMonologueOpen(false);
+    setIsChatOpen(false);
+    setSelectedChat(null);
+    
+    // 페이지 새로고침으로 완전 초기화
+    window.location.reload();
+  };
+
+  // 컴포넌트 마운트 시 챕터 진행 상황 로드
+  useEffect(() => {
+    loadChapterProgress();
+    setCurrentChapter(chapterUtils.getCurrentChapter());
+  }, []);
+
+  // 챕터 변경 시 독백 인덱스 초기화
+  useEffect(() => {
+    setCurrentMonologueIndex(0);
+  }, [currentChapter]);
 
   const chatRooms = [
     { id: 'room1', name: '게임 관리자', lastMessage: '안녕하세요! 도움이 필요하시면...', time: '오후 2:30', unread: 2 },
@@ -83,6 +110,9 @@ export default function GameContainer() {
         <MonologueButton onClick={startMonologue}>
           💭
         </MonologueButton>
+        <ResetButton onClick={handleResetGame}>
+          🔄
+        </ResetButton>
       </BottomFixedArea>
       
       {isChatOpen && (
@@ -140,18 +170,18 @@ export default function GameContainer() {
         </ChatWindow>
       )}
       
-      {isMonologueOpen && (
-        <MonologueOverlay>
-          <MonologueBox>
-            <MonologueText>
-              {monologueTexts[currentMonologueIndex]}
-            </MonologueText>
-            <MonologueProgress>
-              {currentMonologueIndex + 1} / {monologueTexts.length}
-            </MonologueProgress>
-          </MonologueBox>
-        </MonologueOverlay>
-      )}
+             {isMonologueOpen && currentChapter && (
+               <MonologueOverlay>
+                 <MonologueBox>
+                   <MonologueText>
+                     {currentChapter.monologue[currentMonologueIndex]}
+                   </MonologueText>
+                   <MonologueProgress>
+                     {currentMonologueIndex + 1} / {currentChapter.monologue.length}
+                   </MonologueProgress>
+                 </MonologueBox>
+               </MonologueOverlay>
+             )}
     </GameContainerWrapper>
   );
 }
@@ -389,6 +419,22 @@ const MonologueButton = styled.button`
   width: 40px;
   height: 40px;
   background: #28a745;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 20px;
+  margin-left: 10px;
+  transition: opacity 0.3s;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+`;
+
+const ResetButton = styled.button`
+  width: 40px;
+  height: 40px;
+  background: #dc3545;
   border: none;
   border-radius: 8px;
   cursor: pointer;
