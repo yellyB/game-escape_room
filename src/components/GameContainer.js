@@ -66,16 +66,22 @@ export default function GameContainer() {
   };
 
   const handleResetGame = () => {
-    // 게임 데이터 초기화
-    chapterUtils.resetProgress();
-    setCurrentChapter(chapterUtils.getCurrentChapter());
-    setCurrentMonologueIndex(0);
-    setIsMonologueOpen(false);
-    setIsChatOpen(false);
-    setSelectedChat(null);
+    const confirmed = window.confirm(
+      '게임 데이터가 초기화됩니다. 초기화 하시겠습니까?'
+    );
 
-    // 페이지 새로고침으로 완전 초기화
-    window.location.reload();
+    if (confirmed) {
+      // 게임 데이터 초기화
+      chapterUtils.resetProgress();
+      setCurrentChapter(chapterUtils.getCurrentChapter());
+      setCurrentMonologueIndex(0);
+      setIsMonologueOpen(false);
+      setIsChatOpen(false);
+      setSelectedChat(null);
+
+      // 홈페이지로 이동
+      window.location.href = '/';
+    }
   };
 
   // 컴포넌트 마운트 시 챕터 진행 상황 로드
