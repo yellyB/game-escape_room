@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import phoneIcon from '../images/icon_phone.png';
+import backgroundImage from '../images/background.png';
 import {  chapterUtils, loadChapterProgress } from '../data/monologues';
 import '../utils/debug'; // 개발자 디버그 기능 로드
 
@@ -100,7 +101,7 @@ export default function GameContainer() {
   };
 
   return (
-    <GameContainerWrapper onClick={handleScreenClick}>
+    <GameContainerWrapper onClick={handleScreenClick} backgroundImage={backgroundImage}>
       <BottomFixedArea>
         <PhoneIcon 
           src={phoneIcon} 
@@ -189,6 +190,10 @@ export default function GameContainer() {
 const GameContainerWrapper = styled.div`
   min-height: 100vh;
   background: #000000;
+  background-image: url(${props => props.backgroundImage});
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
   display: flex;
   flex-direction: column;
   position: relative;
