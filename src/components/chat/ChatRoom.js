@@ -5,20 +5,87 @@ import ChatHeader from './ChatHeader';
 
 export default function ChatRoom({ chatId, messages, onBack, onSendMessage }) {
   const [inputMessage, setInputMessage] = useState('');
+  const [displayedMessages, setDisplayedMessages] = useState([]);
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+  const [isWaitingForInput, setIsWaitingForInput] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+
+  // 채팅방이 변경되거나 메시지가 변경될 때 초기화
+  useEffect(() => {
+    setDisplayedMessages([]);
+    setCurrentMessageIndex(0);
+    setIsWaitingForInput(false);
+    setIsTyping(false);
+    setInputMessage('');
+  }, [chatId, messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // 메시지를 줄바꿈으로 분리하는 함수
+  const splitMessageIntoBubbles = text => {
+    return text.split('\n').filter(line => line.trim() !== '');
+  };
+
+  // 순차적으로 메시지 표시
+  useEffect(() => {
+    if (currentMessageIndex < messages.length) {
+      const currentMessage = messages[currentMessageIndex];
+      const messageBubbles = splitMessageIntoBubbles(currentMessage.text);
+
+      // 타이핑 시작
+      setIsTyping(true);
+
+      // 각 줄을 개별 버블로 추가
+      messageBubbles.forEach((bubbleText, bubbleIndex) => {
+        setTimeout(() => {
+          setDisplayedMessages(prev => [
+            ...prev,
+            {
+              ...currentMessage,
+              text: bubbleText,
+              id: `${currentMessageIndex}-${bubbleIndex}`,
+            },
+          ]);
+
+          // 마지막 버블이면 다음 메시지로 진행
+          if (bubbleIndex === messageBubbles.length - 1) {
+            setTimeout(() => {
+              setCurrentMessageIndex(prev => prev + 1);
+            }, 1500); // 1.5초 대기
+          }
+        }, bubbleIndex * 2000); // 각 버블 간 간격
+      });
+    } else {
+      // 모든 메시지가 표시되었을 때
+      setIsTyping(false);
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage && lastMessage.isOwn) {
+        setIsWaitingForInput(true);
+        // 입력창에 자동으로 포커스
+        setTimeout(() => {
+          inputRef.current?.focus();
+        }, 500);
+      }
+    }
+  }, [currentMessageIndex, messages]);
+
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [displayedMessages]);
 
   const handleSend = () => {
     if (inputMessage.trim()) {
       onSendMessage(chatId, inputMessage);
       setInputMessage('');
+      setIsWaitingForInput(false);
+      // 메시지 전송 후 다음 메시지로 진행
+      setTimeout(() => {
+        setCurrentMessageIndex(prev => prev + 1);
+      }, 1000);
     }
   };
 
@@ -34,24 +101,42 @@ export default function ChatRoom({ chatId, messages, onBack, onSendMessage }) {
       <ChatHeader title="채팅방" onBack={onBack} />
 
       <ChatContent>
-        {messages.map((message, index) => (
-          <MessageBubble key={index} isOwn={message.isOwn}>
+        {displayedMessages.map((message, index) => (
+          <MessageBubble key={message.id || index} isOwn={message.isOwn}>
             {message.text}
           </MessageBubble>
         ))}
+        {isTyping && (
+          <TypingIndicator>
+            <TypingDots>
+              <span>.</span>
+              <span>.</span>
+              <span>.</span>
+            </TypingDots>
+          </TypingIndicator>
+        )}
         <div ref={messagesEndRef} />
       </ChatContent>
 
       <MessageInput>
         <InputField
+          ref={inputRef}
           value={inputMessage}
           onChange={e => setInputMessage(e.target.value)}
           onKeyDown={handleKeyPress}
-          placeholder="메시지를 입력하세요..."
+          placeholder={
+            isWaitingForInput
+              ? '답장을 입력하세요...'
+              : '메시지를 입력하세요...'
+          }
           rows={1}
           spellCheck={false}
+          disabled={!isWaitingForInput}
         />
-        <SendButton onClick={handleSend} disabled={!inputMessage.trim()}>
+        <SendButton
+          onClick={handleSend}
+          disabled={!inputMessage.trim() || !isWaitingForInput}
+        >
           전송
         </SendButton>
       </MessageInput>
@@ -118,6 +203,11 @@ const InputField = styled.textarea`
     outline: none;
   }
 
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   &::placeholder {
     color: ${colors.lightGray};
   }
@@ -136,5 +226,54 @@ const SendButton = styled.button`
   &:disabled {
     background: ${colors.lightGraySecondary};
     cursor: not-allowed;
+  }
+`;
+
+const TypingIndicator = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: ${colors.lightGraySecondary};
+  border-radius: 16px;
+  max-width: 70%;
+  align-self: flex-start;
+  margin-bottom: 12px;
+`;
+
+const TypingDots = styled.div`
+  display: flex;
+  gap: 4px;
+
+  span {
+    width: 8px;
+    height: 8px;
+    background: ${colors.lightGray};
+    border-radius: 50%;
+    animation: typing 1.4s infinite ease-in-out;
+
+    &:nth-child(1) {
+      animation-delay: -0.32s;
+    }
+
+    &:nth-child(2) {
+      animation-delay: -0.16s;
+    }
+
+    &:nth-child(3) {
+      animation-delay: 0s;
+    }
+  }
+
+  @keyframes typing {
+    0%,
+    80%,
+    100% {
+      transform: scale(0.8);
+      opacity: 0.5;
+    }
+    40% {
+      transform: scale(1);
+      opacity: 1;
+    }
   }
 `;

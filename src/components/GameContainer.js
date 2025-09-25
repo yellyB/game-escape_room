@@ -4,6 +4,11 @@ import phoneIcon from '../images/icon_phone.png';
 import backgroundImage from '../images/background.png';
 import playerImage from '../images/player.png';
 import { chapterUtils, loadChapterProgress } from '../data/monologues';
+import {
+  chatRooms,
+  getChatMessages,
+  messageProgressUtils,
+} from '../data/chatData';
 import ChatList from './chat/ChatList';
 import ChatRoom from './chat/ChatRoom';
 import '../utils/debug'; // 개발자 디버그 기능 로드
@@ -14,6 +19,7 @@ export default function GameContainer() {
   const [isMonologueOpen, setIsMonologueOpen] = useState(false);
   const [currentMonologueIndex, setCurrentMonologueIndex] = useState(0);
   const [currentChapter, setCurrentChapter] = useState(null);
+  const [chatMessages, setChatMessages] = useState({});
 
   const handlePhoneClick = () => {
     setIsChatOpen(!isChatOpen);
@@ -31,14 +37,60 @@ export default function GameContainer() {
   };
 
   const handleSendMessage = (chatId, message) => {
-    const messages = JSON.parse(localStorage.getItem(`chat_${chatId}`) || '[]');
     const newMessage = {
       text: message,
       isOwn: true,
       timestamp: Date.now(),
     };
+
+    setChatMessages(prev => ({
+      ...prev,
+      [chatId]: [...(prev[chatId] || []), newMessage],
+    }));
+
+    // 로컬 스토리지에도 저장
+    const messages = JSON.parse(localStorage.getItem(`chat_${chatId}`) || '[]');
     messages.push(newMessage);
     localStorage.setItem(`chat_${chatId}`, JSON.stringify(messages));
+
+    // 메시지 전송 후 다음 단계로 진행
+    setTimeout(() => {
+      messageProgressUtils.incrementPhase(chatId);
+
+      // 다른 채팅방의 다음 단계 메시지가 있는지 확인하고 추가
+      updateOtherChatRooms(chatId);
+    }, 2000);
+  };
+
+  // 다른 채팅방의 메시지 업데이트
+  const updateOtherChatRooms = currentChatId => {
+    const chatOrder = ['friend_mina', 'mom', 'sister', 'junior'];
+    const currentIndex = chatOrder.indexOf(currentChatId);
+
+    // 현재 채팅방 다음 순서의 채팅방들 업데이트
+    for (let i = currentIndex + 1; i < chatOrder.length; i++) {
+      const nextChatId = chatOrder[i];
+      const nextPhase = messageProgressUtils.getCurrentPhase(nextChatId);
+      const nextMessages = getChatMessages(nextChatId, nextPhase);
+
+      if (nextMessages.length > 0) {
+        // 새로운 메시지를 실시간으로 추가
+        setChatMessages(prev => ({
+          ...prev,
+          [nextChatId]: [...(prev[nextChatId] || []), ...nextMessages],
+        }));
+
+        // 로컬 스토리지에도 저장
+        const savedMessages = JSON.parse(
+          localStorage.getItem(`chat_${nextChatId}`) || '[]'
+        );
+        const updatedMessages = [...savedMessages, ...nextMessages];
+        localStorage.setItem(
+          `chat_${nextChatId}`,
+          JSON.stringify(updatedMessages)
+        );
+      }
+    }
   };
 
   const handleScreenClick = () => {
@@ -73,11 +125,13 @@ export default function GameContainer() {
     if (confirmed) {
       // 게임 데이터 초기화
       chapterUtils.resetProgress();
+      messageProgressUtils.resetProgress();
       setCurrentChapter(chapterUtils.getCurrentChapter());
       setCurrentMonologueIndex(0);
       setIsMonologueOpen(false);
       setIsChatOpen(false);
       setSelectedChat(null);
+      setChatMessages({});
 
       // 홈페이지로 이동
       window.location.href = '/';
@@ -87,6 +141,7 @@ export default function GameContainer() {
   // 컴포넌트 마운트 시 챕터 진행 상황 로드
   useEffect(() => {
     loadChapterProgress();
+    messageProgressUtils.loadProgress();
     setCurrentChapter(chapterUtils.getCurrentChapter());
   }, []);
 
@@ -95,69 +150,25 @@ export default function GameContainer() {
     setCurrentMonologueIndex(0);
   }, [currentChapter]);
 
-  const chatRooms = [
-    {
-      id: 'room1',
-      name: '게임 관리자',
-      lastMessage: '안녕하세요! 도움이 필요하시면...',
-      time: '오후 2:30',
-      unread: 2,
-    },
-    {
-      id: 'room2',
-      name: '플레이어1',
-      lastMessage: '게임 재미있네요!',
-      time: '오후 2:25',
-      unread: 0,
-    },
-    {
-      id: 'room3',
-      name: '플레이어2',
-      lastMessage: '다음에 또 같이 해요',
-      time: '오후 2:20',
-      unread: 1,
-    },
-  ];
+  const getChatMessagesForRoom = chatId => {
+    // 실시간 메시지가 있으면 그것을 사용
+    if (chatMessages[chatId]) {
+      return chatMessages[chatId];
+    }
 
-  const getChatMessages = chatId => {
+    // 현재 단계의 메시지 가져오기
+    const currentPhase = messageProgressUtils.getCurrentPhase(chatId);
+    const phaseMessages = getChatMessages(chatId, currentPhase);
+
     // 로컬 스토리지에서 메시지 불러오기
     const savedMessages = JSON.parse(
       localStorage.getItem(`chat_${chatId}`) || '[]'
     );
 
-    // 기본 메시지가 없으면 초기 메시지 추가
-    if (savedMessages.length === 0) {
-      const defaultMessages = {
-        room1: [
-          {
-            text: '안녕하세요! 게임에 오신 것을 환영합니다.',
-            isOwn: false,
-            timestamp: Date.now() - 10000,
-          },
-          {
-            text: '도움이 필요하시면 언제든 말씀해주세요.',
-            isOwn: false,
-            timestamp: Date.now() - 9000,
-          },
-        ],
-        room2: [
-          {
-            text: '게임 재미있네요!',
-            isOwn: false,
-            timestamp: Date.now() - 8000,
-          },
-        ],
-        room3: [
-          {
-            text: '다음에 또 같이 해요',
-            isOwn: false,
-            timestamp: Date.now() - 7000,
-          },
-        ],
-      };
-      const initialMessages = defaultMessages[chatId] || [];
-      localStorage.setItem(`chat_${chatId}`, JSON.stringify(initialMessages));
-      return initialMessages;
+    // 기본 메시지가 없으면 현재 단계의 메시지 추가
+    if (savedMessages.length === 0 && phaseMessages.length > 0) {
+      localStorage.setItem(`chat_${chatId}`, JSON.stringify(phaseMessages));
+      return phaseMessages;
     }
 
     return savedMessages;
@@ -182,7 +193,7 @@ export default function GameContainer() {
         (selectedChat ? (
           <ChatRoom
             chatId={selectedChat}
-            messages={getChatMessages(selectedChat)}
+            messages={getChatMessagesForRoom(selectedChat)}
             onBack={handleBackToList}
             onSendMessage={handleSendMessage}
           />
