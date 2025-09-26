@@ -30,6 +30,9 @@ export default function GameContainer() {
   const handleChatSelect = async chatId => {
     setSelectedChat(chatId);
 
+    // 안읽은 메시지 플래그 해제
+    storageUtils.set(STORAGE_KEYS.UNREAD_MESSAGE(chatId), false);
+
     // 1. 먼저 로컬 스토리지에서 기존 데이터 확인
     const savedMessages = storageUtils.get(
       STORAGE_KEYS.CHAT_MESSAGE(chatId),
@@ -60,6 +63,9 @@ export default function GameContainer() {
           ...prev,
           [chatId]: dialogue,
         }));
+
+        // 안읽은 메시지 플래그 설정
+        storageUtils.set(STORAGE_KEYS.UNREAD_MESSAGE(chatId), true);
 
         console.log(`${chatId} 캐릭터의 대화 데이터:`, dialogue);
       } catch (error) {
@@ -114,6 +120,8 @@ export default function GameContainer() {
     // 대화 데이터 삭제
     characters.forEach(character => {
       storageUtils.remove(STORAGE_KEYS.CHAT_MESSAGE(character.id));
+      // 안읽은 메시지 플래그도 삭제
+      storageUtils.remove(STORAGE_KEYS.UNREAD_MESSAGE(character.id));
     });
 
     // 캐릭터 데이터 삭제
@@ -189,13 +197,36 @@ export default function GameContainer() {
 
   // API에서 받은 캐릭터 데이터를 ChatList 형식으로 변환
   const getChatRoomsFromCharacters = () => {
-    return characters.map(character => ({
-      id: character.id,
-      name: character.name,
-      lastMessage: '새로운 메시지가 있습니다',
-      time: '방금 전',
-      unread: 1,
-    }));
+    return characters
+      .filter(character => {
+        // 대화 데이터가 있거나 안읽은 메시지가 있는 캐릭터만 표시
+        const hasMessages =
+          storageUtils.get(STORAGE_KEYS.CHAT_MESSAGE(character.id), []).length >
+          0;
+        const hasUnreadMessages = storageUtils.get(
+          STORAGE_KEYS.UNREAD_MESSAGE(character.id),
+          false
+        );
+
+        return hasMessages || hasUnreadMessages;
+      })
+      .map(character => {
+        // 로컬 스토리지에서 안읽은 메시지 플래그 확인
+        const hasUnreadMessages = storageUtils.get(
+          STORAGE_KEYS.UNREAD_MESSAGE(character.id),
+          false
+        );
+
+        return {
+          id: character.id,
+          name: character.name,
+          lastMessage: hasUnreadMessages
+            ? '새로운 메시지가 있습니다'
+            : '대화를 시작하세요',
+          time: '방금 전',
+          unread: hasUnreadMessages ? 1 : 0,
+        };
+      });
   };
 
   // 대화 데이터를 가져오는 함수

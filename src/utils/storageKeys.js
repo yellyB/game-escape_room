@@ -3,7 +3,6 @@ export const STORAGE_KEYS = {
   PREFIX: 'escape_game_',
   CHARACTERS: 'characters',
   CHAT_MESSAGE: characterId => `chat_${characterId}`,
-  UNREAD_MESSAGE: characterId => `unread_${characterId}`,
   CHAPTER_PROGRESS: 'chapter_progress',
   MESSAGE_PROGRESS: 'message_progress',
 };
@@ -78,5 +77,25 @@ export const storageUtils = {
       console.error('로컬 스토리지 전체 삭제 실패:', error);
       return false;
     }
+  },
+
+  // 특정 캐릭터의 대화 데이터 삭제
+  removeChatData: characterId => {
+    return storageUtils.remove(STORAGE_KEYS.CHAT_MESSAGE(characterId));
+  },
+
+  // 캐릭터 데이터 삭제
+  removeCharacters: () => {
+    return storageUtils.remove(STORAGE_KEYS.CHARACTERS);
+  },
+
+  // 챕터 진행 데이터 삭제
+  removeChapterProgress: () => {
+    return storageUtils.remove(STORAGE_KEYS.CHAPTER_PROGRESS);
+  },
+
+  // 메시지 진행 데이터 삭제
+  removeMessageProgress: () => {
+    return storageUtils.remove(STORAGE_KEYS.MESSAGE_PROGRESS);
   },
 };
