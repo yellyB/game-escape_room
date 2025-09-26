@@ -7,7 +7,7 @@ import { chapterUtils, loadChapterProgress } from '../data/monologues';
 import { getCharacters, getDialogue } from '../services/api';
 import ChatList from './chat/ChatList';
 import ChatRoom from './chat/ChatRoom';
-import { STORAGE_KEYS, getStorageKey, storageUtils } from '../utils/storage';
+import { STORAGE_KEYS, storageUtils } from '../utils/storage';
 import '../utils/debug'; // 개발자 디버그 기능 로드
 
 export default function GameContainer() {
@@ -15,6 +15,7 @@ export default function GameContainer() {
   const [selectedChat, setSelectedChat] = useState(null);
   const [isMonologueOpen, setIsMonologueOpen] = useState(false);
   const [currentMonologueIndex, setCurrentMonologueIndex] = useState(0);
+  const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [currentChapter, setCurrentChapter] = useState(null);
   const [characters, setCharacters] = useState([]);
   const [dialogueData, setDialogueData] = useState({});
@@ -93,26 +94,39 @@ export default function GameContainer() {
 
   const handleScreenClick = () => {
     if (isMonologueOpen && currentChapter) {
-      if (currentMonologueIndex < currentChapter.monologue.length - 1) {
-        setCurrentMonologueIndex(currentMonologueIndex + 1);
+      const currentMonologueGroup =
+        currentChapter.monologue[currentMonologueIndex];
+
+      // 현재 그룹 내에서 더 표시할 텍스트가 있는지 확인
+      if (currentTextIndex < currentMonologueGroup.length - 1) {
+        // 같은 그룹 내에서 다음 텍스트로
+        setCurrentTextIndex(currentTextIndex + 1);
       } else {
-        // 독백이 끝나면 챕터 완료 처리
-        chapterUtils.completeChapter(currentChapter.id);
+        // 현재 그룹의 모든 텍스트를 표시했으므로 다음 그룹으로
+        if (currentMonologueIndex < currentChapter.monologue.length - 1) {
+          setCurrentTextIndex(0);
+          setCurrentMonologueIndex(currentMonologueIndex + 1);
+        } else {
+          // 모든 독백이 끝나면 챕터 완료 처리
+          chapterUtils.completeChapter(currentChapter.id);
 
-        // 다음 챕터로 진행
-        if (chapterUtils.goToNextChapter()) {
-          setCurrentChapter(chapterUtils.getCurrentChapter());
+          // 다음 챕터로 진행
+          if (chapterUtils.goToNextChapter()) {
+            setCurrentChapter(chapterUtils.getCurrentChapter());
+          }
+
+          setCurrentMonologueIndex(0);
+          setCurrentTextIndex(0);
+          setIsMonologueOpen(false);
         }
-
-        setIsMonologueOpen(false);
-        setCurrentMonologueIndex(0);
       }
     }
   };
 
   const startMonologue = () => {
-    setIsMonologueOpen(true);
     setCurrentMonologueIndex(0);
+    setCurrentTextIndex(0);
+    setIsMonologueOpen(true);
   };
 
   // 로컬 스토리지 데이터 삭제 함수
@@ -193,6 +207,7 @@ export default function GameContainer() {
   // 챕터 변경 시 독백 인덱스 초기화
   useEffect(() => {
     setCurrentMonologueIndex(0);
+    setCurrentTextIndex(0);
   }, [currentChapter]);
 
   // API에서 받은 캐릭터 데이터를 ChatList 형식으로 변환
@@ -288,21 +303,39 @@ export default function GameContainer() {
           />
         ))}
 
-      {isMonologueOpen && currentChapter && (
-        <MonologueOverlay>
-          <MonologueBox>
-            <MonologueContent>
-              <PlayerImage src={playerImage} alt="Player" />
-              <MonologueText>
-                {currentChapter.monologue[currentMonologueIndex]}
-              </MonologueText>
-            </MonologueContent>
-            <MonologueProgress>
-              {currentMonologueIndex + 1} / {currentChapter.monologue.length}
-            </MonologueProgress>
-          </MonologueBox>
-        </MonologueOverlay>
-      )}
+      {isMonologueOpen &&
+        currentChapter &&
+        currentChapter.monologue &&
+        currentTextIndex >= 0 && (
+          <MonologueOverlay>
+            <MonologueBox>
+              <MonologueContent>
+                <PlayerImage src={playerImage} alt="Player" />
+                <MonologueText>
+                  {currentChapter.monologue[currentMonologueIndex]?.map(
+                    (text, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          marginBottom: '10px',
+                          opacity: index <= currentTextIndex ? 1 : 0,
+                          transition: 'opacity 0.3s ease-in-out',
+                          visibility:
+                            index <= currentTextIndex ? 'visible' : 'hidden',
+                        }}
+                      >
+                        {text}
+                      </div>
+                    )
+                  )}
+                </MonologueText>
+              </MonologueContent>
+              <MonologueProgress>
+                {currentMonologueIndex + 1} / {currentChapter.monologue.length}
+              </MonologueProgress>
+            </MonologueBox>
+          </MonologueOverlay>
+        )}
     </GameContainerWrapper>
   );
 }
