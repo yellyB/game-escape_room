@@ -3,7 +3,13 @@ import styled from 'styled-components';
 import colors from '../../styles/colors';
 import ChatHeader from './ChatHeader';
 
-export default function ChatRoom({ chatId, messages, onBack, onSendMessage }) {
+export default function ChatRoom({
+  chatId,
+  messages,
+  onBack,
+  onSendMessage,
+  isLocalData = false,
+}) {
   const [inputMessage, setInputMessage] = useState('');
   const [displayedMessages, setDisplayedMessages] = useState([]);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
@@ -19,7 +25,19 @@ export default function ChatRoom({ chatId, messages, onBack, onSendMessage }) {
     setIsWaitingForInput(false);
     setIsTyping(false);
     setInputMessage('');
-  }, [chatId, messages]);
+
+    // 로컬 데이터인 경우 한번에 모든 메시지 표시
+    if (isLocalData && messages.length > 0) {
+      setDisplayedMessages(messages);
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage && lastMessage.isOwn) {
+        setIsWaitingForInput(true);
+        setTimeout(() => {
+          inputRef.current?.focus();
+        }, 500);
+      }
+    }
+  }, [chatId, messages, isLocalData]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -30,48 +48,56 @@ export default function ChatRoom({ chatId, messages, onBack, onSendMessage }) {
     return text.split('\n').filter(line => line.trim() !== '');
   };
 
-  // 순차적으로 메시지 표시
+  // 순차적으로 메시지 표시 (로컬 데이터가 아닐 때만)
   useEffect(() => {
-    if (currentMessageIndex < messages.length) {
-      const currentMessage = messages[currentMessageIndex];
-      const messageBubbles = splitMessageIntoBubbles(currentMessage.text);
+    if (!isLocalData) {
+      if (currentMessageIndex < messages.length) {
+        // 순차적 메시지 표시
+        const currentMessage = messages[currentMessageIndex];
+        const messageBubbles = splitMessageIntoBubbles(currentMessage.text);
 
-      // 타이핑 시작
-      setIsTyping(true);
+        // 다음 메시지가 있으면 타이핑 표시
+        const hasNextMessage = currentMessageIndex < messages.length - 1;
+        if (hasNextMessage) {
+          setIsTyping(true);
+        }
 
-      // 각 줄을 개별 버블로 추가
-      messageBubbles.forEach((bubbleText, bubbleIndex) => {
-        setTimeout(() => {
-          setDisplayedMessages(prev => [
-            ...prev,
-            {
-              ...currentMessage,
-              text: bubbleText,
-              id: `${currentMessageIndex}-${bubbleIndex}`,
-            },
-          ]);
+        // 각 줄을 개별 버블로 추가
+        messageBubbles.forEach((bubbleText, bubbleIndex) => {
+          setTimeout(() => {
+            setDisplayedMessages(prev => [
+              ...prev,
+              {
+                ...currentMessage,
+                text: bubbleText,
+                id: `${currentMessageIndex}-${bubbleIndex}`,
+              },
+            ]);
 
-          // 마지막 버블이면 다음 메시지로 진행
-          if (bubbleIndex === messageBubbles.length - 1) {
-            setTimeout(() => {
-              setCurrentMessageIndex(prev => prev + 1);
-            }, 1500); // 1.5초 대기
-          }
-        }, bubbleIndex * 2000); // 각 버블 간 간격
-      });
-    } else {
-      // 모든 메시지가 표시되었을 때
-      setIsTyping(false);
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage && lastMessage.isOwn) {
-        setIsWaitingForInput(true);
-        // 입력창에 자동으로 포커스
-        setTimeout(() => {
-          inputRef.current?.focus();
-        }, 500);
+            // 마지막 버블이면 타이핑 중지하고 다음 메시지로 진행
+            if (bubbleIndex === messageBubbles.length - 1) {
+              // 마지막 메시지의 마지막 버블이면 즉시 저장
+              if (currentMessageIndex === messages.length - 1) {
+                setTimeout(() => {
+                  setIsTyping(false);
+                  localStorage.setItem(
+                    `chat_${chatId}`,
+                    JSON.stringify(messages)
+                  );
+                  setCurrentMessageIndex(prev => prev + 1);
+                }, 200); // 즉시 저장
+              } else {
+                setTimeout(() => {
+                  setIsTyping(false);
+                  setCurrentMessageIndex(prev => prev + 1);
+                }, 2000); // 2초 대기
+              }
+            }
+          }, bubbleIndex * 2000); // 각 버블 간 간격
+        });
       }
     }
-  }, [currentMessageIndex, messages]);
+  }, [currentMessageIndex, messages, isLocalData, chatId]);
 
   useEffect(() => {
     scrollToBottom();

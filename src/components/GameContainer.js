@@ -4,11 +4,6 @@ import phoneIcon from '../images/icon_phone.png';
 import backgroundImage from '../images/background.png';
 import playerImage from '../images/player.png';
 import { chapterUtils, loadChapterProgress } from '../data/monologues';
-import {
-  chatRooms,
-  getChatMessages,
-  messageProgressUtils,
-} from '../data/chatData';
 import { getCharacters, getDialogue } from '../services/api';
 import ChatList from './chat/ChatList';
 import ChatRoom from './chat/ChatRoom';
@@ -20,7 +15,9 @@ export default function GameContainer() {
   const [isMonologueOpen, setIsMonologueOpen] = useState(false);
   const [currentMonologueIndex, setCurrentMonologueIndex] = useState(0);
   const [currentChapter, setCurrentChapter] = useState(null);
-  const [chatMessages, setChatMessages] = useState({});
+  const [characters, setCharacters] = useState([]);
+  const [dialogueData, setDialogueData] = useState({});
+  const [hasLocalData, setHasLocalData] = useState({});
 
   const handlePhoneClick = () => {
     setIsChatOpen(!isChatOpen);
@@ -29,8 +26,44 @@ export default function GameContainer() {
     }
   };
 
-  const handleChatSelect = chatId => {
+  const handleChatSelect = async chatId => {
     setSelectedChat(chatId);
+
+    // 1. 먼저 로컬 스토리지에서 기존 데이터 확인
+    const savedMessages = JSON.parse(
+      localStorage.getItem(`chat_${chatId}`) || '[]'
+    );
+
+    // 2. 로컬 스토리지 데이터 여부 저장
+    const hasLocal = savedMessages.length > 0;
+    setHasLocalData(prev => ({
+      ...prev,
+      [chatId]: hasLocal,
+    }));
+
+    // 3. 로컬 스토리지에 데이터가 있으면 API 호출하지 않음
+    if (hasLocal) {
+      console.log(`${chatId} 캐릭터의 로컬 저장된 대화 데이터 사용`);
+      return;
+    }
+
+    // 4. 로컬 스토리지에 데이터가 없으면 API에서 가져오기
+    if (!dialogueData[chatId]) {
+      try {
+        const dialogue = await getDialogue({
+          characterId: chatId,
+          partNumber: 1,
+        });
+        setDialogueData(prev => ({
+          ...prev,
+          [chatId]: dialogue,
+        }));
+
+        console.log(`${chatId} 캐릭터의 대화 데이터:`, dialogue);
+      } catch (error) {
+        console.error(`${chatId} 캐릭터 대화 데이터 로딩 실패:`, error);
+      }
+    }
   };
 
   const handleBackToList = () => {
@@ -44,54 +77,10 @@ export default function GameContainer() {
       timestamp: Date.now(),
     };
 
-    setChatMessages(prev => ({
-      ...prev,
-      [chatId]: [...(prev[chatId] || []), newMessage],
-    }));
-
-    // 로컬 스토리지에도 저장
+    // 로컬 스토리지에 사용자 메시지 추가
     const messages = JSON.parse(localStorage.getItem(`chat_${chatId}`) || '[]');
     messages.push(newMessage);
     localStorage.setItem(`chat_${chatId}`, JSON.stringify(messages));
-
-    // 메시지 전송 후 다음 단계로 진행
-    setTimeout(() => {
-      messageProgressUtils.incrementPhase(chatId);
-
-      // 다른 채팅방의 다음 단계 메시지가 있는지 확인하고 추가
-      updateOtherChatRooms(chatId);
-    }, 2000);
-  };
-
-  // 다른 채팅방의 메시지 업데이트
-  const updateOtherChatRooms = currentChatId => {
-    const chatOrder = ['friend_mina', 'mom', 'sister', 'junior'];
-    const currentIndex = chatOrder.indexOf(currentChatId);
-
-    // 현재 채팅방 다음 순서의 채팅방들 업데이트
-    for (let i = currentIndex + 1; i < chatOrder.length; i++) {
-      const nextChatId = chatOrder[i];
-      const nextPhase = messageProgressUtils.getCurrentPhase(nextChatId);
-      const nextMessages = getChatMessages(nextChatId, nextPhase);
-
-      if (nextMessages.length > 0) {
-        // 새로운 메시지를 실시간으로 추가
-        setChatMessages(prev => ({
-          ...prev,
-          [nextChatId]: [...(prev[nextChatId] || []), ...nextMessages],
-        }));
-
-        // 로컬 스토리지에도 저장
-        const savedMessages = JSON.parse(
-          localStorage.getItem(`chat_${nextChatId}`) || '[]'
-        );
-        const updatedMessages = [...savedMessages, ...nextMessages];
-        localStorage.setItem(
-          `chat_${nextChatId}`,
-          JSON.stringify(updatedMessages)
-        );
-      }
-    }
   };
 
   const handleScreenClick = () => {
@@ -126,13 +115,21 @@ export default function GameContainer() {
     if (confirmed) {
       // 게임 데이터 초기화
       chapterUtils.resetProgress();
-      messageProgressUtils.resetProgress();
       setCurrentChapter(chapterUtils.getCurrentChapter());
       setCurrentMonologueIndex(0);
       setIsMonologueOpen(false);
       setIsChatOpen(false);
       setSelectedChat(null);
-      setChatMessages({});
+
+      // 대화 데이터 초기화
+      setCharacters([]);
+      setDialogueData({});
+      setHasLocalData({});
+
+      // 로컬 스토리지에서 대화 데이터 삭제
+      characters.forEach(character => {
+        localStorage.removeItem(`chat_${character.id}`);
+      });
 
       // 홈페이지로 이동
       window.location.href = '/';
@@ -141,34 +138,19 @@ export default function GameContainer() {
 
   useEffect(() => {
     loadChapterProgress();
-    messageProgressUtils.loadProgress();
     setCurrentChapter(chapterUtils.getCurrentChapter());
 
-    // 캐릭터 데이터 가져오기
     const fetchCharacters = async () => {
       try {
-        const characters = await getCharacters();
-        console.log('받은 캐릭터 데이터:', characters);
+        const charactersData = await getCharacters();
+        setCharacters(charactersData);
+        console.log('받은 캐릭터 데이터:', charactersData);
       } catch (error) {
         console.error('캐릭터 데이터 로딩 실패:', error);
       }
     };
 
-    // 대화 데이터 가져오기 (예시: mother 캐릭터의 2번째 파트)
-    const fetchDialogue = async () => {
-      try {
-        const dialogue = await getDialogue({
-          characterId: 'mother',
-          partNumber: 2,
-        });
-        console.log('받은 대화 데이터:', dialogue);
-      } catch (error) {
-        console.error('대화 데이터 로딩 실패:', error);
-      }
-    };
-
     fetchCharacters();
-    fetchDialogue();
   }, []);
 
   // 챕터 변경 시 독백 인덱스 초기화
@@ -176,28 +158,42 @@ export default function GameContainer() {
     setCurrentMonologueIndex(0);
   }, [currentChapter]);
 
+  // API에서 받은 캐릭터 데이터를 ChatList 형식으로 변환
+  const getChatRoomsFromCharacters = () => {
+    return characters.map(character => ({
+      id: character.id,
+      name: character.name,
+      lastMessage: '새로운 메시지가 있습니다',
+      time: '방금 전',
+      unread: 1,
+    }));
+  };
+
+  // 대화 데이터를 가져오는 함수
   const getChatMessagesForRoom = chatId => {
-    // 실시간 메시지가 있으면 그것을 사용
-    if (chatMessages[chatId]) {
-      return chatMessages[chatId];
-    }
-
-    // 현재 단계의 메시지 가져오기
-    const currentPhase = messageProgressUtils.getCurrentPhase(chatId);
-    const phaseMessages = getChatMessages(chatId, currentPhase);
-
     // 로컬 스토리지에서 메시지 불러오기
     const savedMessages = JSON.parse(
       localStorage.getItem(`chat_${chatId}`) || '[]'
     );
 
-    // 기본 메시지가 없으면 현재 단계의 메시지 추가
-    if (savedMessages.length === 0 && phaseMessages.length > 0) {
-      localStorage.setItem(`chat_${chatId}`, JSON.stringify(phaseMessages));
-      return phaseMessages;
+    // 로컬 스토리지에 데이터가 있으면 사용 (한번에 표시)
+    if (savedMessages.length > 0) {
+      return savedMessages;
     }
 
-    return savedMessages;
+    // 로컬 스토리지에 데이터가 없고 API 데이터가 있으면 사용 (순차적 표시)
+    if (dialogueData[chatId]) {
+      const apiMessages = dialogueData[chatId].messages.map(msg => ({
+        id: msg.id,
+        text: msg.message,
+        isOwn: false,
+        timestamp: Date.now(),
+      }));
+
+      return apiMessages;
+    }
+
+    return [];
   };
 
   return (
@@ -222,9 +218,13 @@ export default function GameContainer() {
             messages={getChatMessagesForRoom(selectedChat)}
             onBack={handleBackToList}
             onSendMessage={handleSendMessage}
+            isLocalData={hasLocalData[selectedChat] || false}
           />
         ) : (
-          <ChatList chatRooms={chatRooms} onChatSelect={handleChatSelect} />
+          <ChatList
+            chatRooms={getChatRoomsFromCharacters()}
+            onChatSelect={handleChatSelect}
+          />
         ))}
 
       {isMonologueOpen && currentChapter && (
