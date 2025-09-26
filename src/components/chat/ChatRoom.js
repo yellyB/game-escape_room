@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import colors from '../../styles/colors';
 import ChatHeader from './ChatHeader';
+import { STORAGE_KEYS, getStorageKey, storageUtils } from '../../utils/storage';
 
 export default function ChatRoom({
   chatId,
@@ -64,36 +65,31 @@ export default function ChatRoom({
 
         // 각 줄을 개별 버블로 추가
         messageBubbles.forEach((bubbleText, bubbleIndex) => {
-          setTimeout(() => {
-            setDisplayedMessages(prev => [
-              ...prev,
-              {
-                ...currentMessage,
-                text: bubbleText,
-                id: `${currentMessageIndex}-${bubbleIndex}`,
-              },
-            ]);
+          setDisplayedMessages(prev => [
+            ...prev,
+            {
+              ...currentMessage,
+              text: bubbleText,
+              id: `${currentMessageIndex}-${bubbleIndex}`,
+            },
+          ]);
 
-            // 마지막 버블이면 타이핑 중지하고 다음 메시지로 진행
-            if (bubbleIndex === messageBubbles.length - 1) {
-              // 마지막 메시지의 마지막 버블이면 즉시 저장
-              if (currentMessageIndex === messages.length - 1) {
-                setTimeout(() => {
-                  setIsTyping(false);
-                  localStorage.setItem(
-                    `chat_${chatId}`,
-                    JSON.stringify(messages)
-                  );
-                  setCurrentMessageIndex(prev => prev + 1);
-                }, 200); // 즉시 저장
-              } else {
-                setTimeout(() => {
-                  setIsTyping(false);
-                  setCurrentMessageIndex(prev => prev + 1);
-                }, 2000); // 2초 대기
-              }
+          // 마지막 버블이면 타이핑 중지하고 다음 메시지로 진행
+          if (bubbleIndex === messageBubbles.length - 1) {
+            // 마지막 메시지의 마지막 버블이면 즉시 저장
+            if (currentMessageIndex === messages.length - 1) {
+              setTimeout(() => {
+                setIsTyping(false);
+                storageUtils.set(STORAGE_KEYS.CHAT_MESSAGE(chatId), messages);
+                setCurrentMessageIndex(prev => prev + 1);
+              }, 200); // 즉시 저장
+            } else {
+              setTimeout(() => {
+                setIsTyping(false);
+                setCurrentMessageIndex(prev => prev + 1);
+              }, 1500); // 2초 대기
             }
-          }, bubbleIndex * 2000); // 각 버블 간 간격
+          }
         });
       }
     }

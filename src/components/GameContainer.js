@@ -7,6 +7,7 @@ import { chapterUtils, loadChapterProgress } from '../data/monologues';
 import { getCharacters, getDialogue } from '../services/api';
 import ChatList from './chat/ChatList';
 import ChatRoom from './chat/ChatRoom';
+import { STORAGE_KEYS, getStorageKey, storageUtils } from '../utils/storage';
 import '../utils/debug'; // 개발자 디버그 기능 로드
 
 export default function GameContainer() {
@@ -30,8 +31,9 @@ export default function GameContainer() {
     setSelectedChat(chatId);
 
     // 1. 먼저 로컬 스토리지에서 기존 데이터 확인
-    const savedMessages = JSON.parse(
-      localStorage.getItem(`chat_${chatId}`) || '[]'
+    const savedMessages = storageUtils.get(
+      STORAGE_KEYS.CHAT_MESSAGE(chatId),
+      []
     );
 
     // 2. 로컬 스토리지 데이터 여부 저장
@@ -78,9 +80,9 @@ export default function GameContainer() {
     };
 
     // 로컬 스토리지에 사용자 메시지 추가
-    const messages = JSON.parse(localStorage.getItem(`chat_${chatId}`) || '[]');
+    const messages = storageUtils.get(STORAGE_KEYS.CHAT_MESSAGE(chatId), []);
     messages.push(newMessage);
-    localStorage.setItem(`chat_${chatId}`, JSON.stringify(messages));
+    storageUtils.set(STORAGE_KEYS.CHAT_MESSAGE(chatId), messages);
   };
 
   const handleScreenClick = () => {
@@ -107,6 +109,21 @@ export default function GameContainer() {
     setCurrentMonologueIndex(0);
   };
 
+  // 로컬 스토리지 데이터 삭제 함수
+  const clearLocalStorageData = () => {
+    // 대화 데이터 삭제
+    characters.forEach(character => {
+      storageUtils.remove(STORAGE_KEYS.CHAT_MESSAGE(character.id));
+    });
+
+    // 캐릭터 데이터 삭제
+    storageUtils.remove(STORAGE_KEYS.CHARACTERS);
+
+    // 기타 게임 관련 데이터 삭제
+    storageUtils.remove(STORAGE_KEYS.CHAPTER_PROGRESS);
+    storageUtils.remove(STORAGE_KEYS.MESSAGE_PROGRESS);
+  };
+
   const handleResetGame = () => {
     const confirmed = window.confirm(
       '게임 데이터가 초기화됩니다. 초기화 하시겠습니까?'
@@ -126,10 +143,8 @@ export default function GameContainer() {
       setDialogueData({});
       setHasLocalData({});
 
-      // 로컬 스토리지에서 대화 데이터 삭제
-      characters.forEach(character => {
-        localStorage.removeItem(`chat_${character.id}`);
-      });
+      // 로컬 스토리지 데이터 삭제
+      clearLocalStorageData();
 
       // 홈페이지로 이동
       window.location.href = '/';
@@ -142,8 +157,22 @@ export default function GameContainer() {
 
     const fetchCharacters = async () => {
       try {
+        // 먼저 로컬 스토리지에서 캐릭터 데이터 확인
+        const savedCharacters = storageUtils.get(STORAGE_KEYS.CHARACTERS, []);
+
+        if (savedCharacters.length > 0) {
+          setCharacters(savedCharacters);
+          console.log('로컬 저장된 캐릭터 데이터 사용:', savedCharacters);
+          return;
+        }
+
+        // 로컬 스토리지에 데이터가 없으면 API에서 가져오기
         const charactersData = await getCharacters();
         setCharacters(charactersData);
+
+        // API 데이터를 로컬 스토리지에 저장
+        storageUtils.set(STORAGE_KEYS.CHARACTERS, charactersData);
+
         console.log('받은 캐릭터 데이터:', charactersData);
       } catch (error) {
         console.error('캐릭터 데이터 로딩 실패:', error);
@@ -172,8 +201,9 @@ export default function GameContainer() {
   // 대화 데이터를 가져오는 함수
   const getChatMessagesForRoom = chatId => {
     // 로컬 스토리지에서 메시지 불러오기
-    const savedMessages = JSON.parse(
-      localStorage.getItem(`chat_${chatId}`) || '[]'
+    const savedMessages = storageUtils.get(
+      STORAGE_KEYS.CHAT_MESSAGE(chatId),
+      []
     );
 
     // 로컬 스토리지에 데이터가 있으면 사용 (한번에 표시)
