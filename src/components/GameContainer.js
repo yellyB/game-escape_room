@@ -200,9 +200,14 @@ export default function GameContainer() {
     return characters
       .filter(character => {
         // 대화 데이터가 있거나 안읽은 메시지가 있는 캐릭터만 표시
-        const hasMessages = storageUtils.get(STORAGE_KEYS.CHAT_MESSAGE(character.id), []).length > 0;
-        const hasUnreadMessages = storageUtils.get(STORAGE_KEYS.UNREAD_MESSAGE(character.id), false);
-        
+        const hasMessages =
+          storageUtils.get(STORAGE_KEYS.CHAT_MESSAGE(character.id), []).length >
+          0;
+        const hasUnreadMessages = storageUtils.get(
+          STORAGE_KEYS.UNREAD_MESSAGE(character.id),
+          false
+        );
+
         return hasMessages || hasUnreadMessages;
       })
       .map(character => {
