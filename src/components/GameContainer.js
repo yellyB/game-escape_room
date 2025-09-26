@@ -9,6 +9,7 @@ import {
   getChatMessages,
   messageProgressUtils,
 } from '../data/chatData';
+import { getCharacters, getDialogue } from '../services/api';
 import ChatList from './chat/ChatList';
 import ChatRoom from './chat/ChatRoom';
 import '../utils/debug'; // 개발자 디버그 기능 로드
@@ -138,11 +139,36 @@ export default function GameContainer() {
     }
   };
 
-  // 컴포넌트 마운트 시 챕터 진행 상황 로드
   useEffect(() => {
     loadChapterProgress();
     messageProgressUtils.loadProgress();
     setCurrentChapter(chapterUtils.getCurrentChapter());
+
+    // 캐릭터 데이터 가져오기
+    const fetchCharacters = async () => {
+      try {
+        const characters = await getCharacters();
+        console.log('받은 캐릭터 데이터:', characters);
+      } catch (error) {
+        console.error('캐릭터 데이터 로딩 실패:', error);
+      }
+    };
+
+    // 대화 데이터 가져오기 (예시: mother 캐릭터의 2번째 파트)
+    const fetchDialogue = async () => {
+      try {
+        const dialogue = await getDialogue({
+          characterId: 'mother',
+          partNumber: 2,
+        });
+        console.log('받은 대화 데이터:', dialogue);
+      } catch (error) {
+        console.error('대화 데이터 로딩 실패:', error);
+      }
+    };
+
+    fetchCharacters();
+    fetchDialogue();
   }, []);
 
   // 챕터 변경 시 독백 인덱스 초기화
