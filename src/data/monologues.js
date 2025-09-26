@@ -3,52 +3,90 @@ export const chapters = [
   {
     id: 'opening',
     monologue: [
-      '…여긴 어디지?',
-      '눈을 뜨니 낯선 방. 창문도, 문도 없다.',
-      '공기는 텅 비어 있고, 손끝엔 예전부터 사용하던 내 휴대폰 하나.',
-      '',
-      '기억을 더듬어보니…',
-      '',
-      '나는 여동생이 너무 미웠다.',
-      '',
-      '행복하던 그 모습이 꼴 보기 싫어서,',
-      '',
-      '이 방에 가둬버리고 싶었다.',
-      '',
-      '그런데 눈을 떠보니',
-      '',
-      '갇힌 건 내가 되어 있었다.',
-      '',
-      '어떻게 된 거지?',
-      '……일단, 나가야 한다.',
+      [
+        '…여긴 어디지?',
+        '눈을 뜨니 낯선 방. 창문도, 문도 없다.',
+        '공기는 텅 비어 있고, 손끝엔 예전부터 사용하던 내 휴대폰 하나.',
+      ],
+      [
+        '기억을 더듬어보니…',
+        '나는 여동생이 너무 미웠다.',
+        '행복하던 그 모습이 꼴 보기 싫어서,',
+        '이 방에 가둬버리고 싶었다.',
+      ],
+      [
+        '그런데 눈을 떠보니',
+        '갇힌 건 내가 되어 있었다.',
+        '어떻게 된 거지?',
+        '……일단, 나가야 한다.',
+      ],
+    ],
+    nextChapter: 'conversation_friend',
+    isCompleted: false,
+  },
+  {
+    id: 'conversation_friend',
+    monologue: [
+      [
+        '내가 평소에 잘 웃었던건 진짜로 웃겨서가 아니라',
+        '나 같은 애는 웃는거라도 잘해야',
+        '다른 사람들이 좋아하기 때문이었어',
+      ],
+    ],
+    nextChapter: 'conversation_sister',
+    isCompleted: false,
+  },
+  {
+    id: 'conversation_sister',
+    monologue: [['뭐지? 여동생..?', '어디에 있는거야', '날 보고 있나?']],
+    nextChapter: 'conversation_mother',
+    isCompleted: false,
+  },
+  {
+    id: 'conversation_mother',
+    monologue: [
+      ['또 엄마가 먼저 사과하신다.', '잘못은 내가 먼저 했는데.'],
+      [
+        '…',
+        '난 어렸을때부터 친구가 별로 없어서 혼자 그림을 그리다보니',
+        '그림을 잘 그리게 되었다.',
+        '그걸 보고 엄마가 자랑스러워하는 모습때문에',
+        '더, 더 열심히 하게 되었다.',
+        '중간부터는 진짜 내가 그림그리는걸 좋아하는건지, 알수도 없게 되어버렸다.',
+      ],
+      [
+        '아냐 난 너무 외롭고 혼자있는 시간이 불안했어.',
+        '하지만 그걸 드러내면 오히려 나를 내칠까봐',
+        '티 낼 수 없었어.',
+        '매일 괜찮은 척 엄마를 속였어.',
+      ],
+      [
+        '외롭다고 너무나도 말하고 싶은데',
+        '엄마한텐 절대 말할수가 없어',
+        '괴로워',
+      ],
+    ],
+    nextChapter: 'conversation_colleague',
+    isCompleted: false,
+  },
+  {
+    id: 'conversation_colleague',
+    monologue: [
+      [
+        '민영씨..',
+        '회사 다니면서 처음으로 생긴 후배라서',
+        '잘 챙겨주고 싶었는데.',
+        '그치만 내가 일을 잘하는것도 아니고',
+        '날 존경한다거나 그런 마음이 전혀 없겠지',
+        '괜히 항상 미안한 마음밖에 없다.',
+      ],
     ],
     nextChapter: 'realization',
     isCompleted: false,
   },
   {
     id: 'realization',
-    monologue: [
-      '이제 알겠지?',
-      '문은 밖에서 잠긴 적 없어.',
-      '네가 스스로 잠근 거야.',
-      '',
-      '……내가, 나를 가둔 거였어.',
-      '',
-      '그럴수가',
-      '',
-      '열쇠도 네가 가지고 있어.',
-      '그냥 이런 널 받아들여',
-      '',
-      '흥, 그래.',
-      '날 혐오하든 뭐든, 난 네 일부야.',
-      '마찬가지로 못난 네 모습도 너이고.',
-      '그러니까 자꾸 숨기려고 하지마.',
-      '나 없인 네가 네가 아니니까.',
-      '',
-      '…그래.',
-      '이제 도망치지 않을게.',
-      '나를 받아들일게.',
-    ],
+    monologue: [['……내가, 나를 가둔 거였어.']],
     nextChapter: null,
     isCompleted: false,
   },
@@ -61,7 +99,13 @@ export const chapterProgress = {
   currentChapterIndex: 0, // 배열 인덱스 (0부터 시작)
   currentChapterId: 'opening', // 현재 챕터 ID
   completedChapters: [],
-  unlockedChapters: ['opening'],
+  unlockedChapters: [
+    'opening',
+    'conversation_friend',
+    'conversation_sister',
+    'conversation_mother',
+    'conversation_colleague',
+  ],
 };
 
 // 로컬 스토리지에서 진행 상황 로드
@@ -179,7 +223,13 @@ export const chapterUtils = {
     chapterProgress.currentChapterIndex = 0;
     chapterProgress.currentChapterId = 'opening';
     chapterProgress.completedChapters = [];
-    chapterProgress.unlockedChapters = ['opening'];
+    chapterProgress.unlockedChapters = [
+      'opening',
+      'conversation_friend',
+      'conversation_sister',
+      'conversation_mother',
+      'conversation_colleague',
+    ];
     chapters.forEach(chapter => {
       chapter.isCompleted = false;
     });
