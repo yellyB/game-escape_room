@@ -22,7 +22,7 @@ export default function ChatList({ chatRooms, onChatSelect }) {
               </RoomInfo>
               <RoomMeta>
                 <RoomTime>{room.time}</RoomTime>
-                {room.unread > 0 && <UnreadBadge>{room.unread}</UnreadBadge>}
+                {room.unread > 0 && <UnreadIndicator>●</UnreadIndicator>}
               </RoomMeta>
             </ChatRoomItem>
           ))}
@@ -113,16 +113,11 @@ const RoomTime = styled.div`
   font-size: 12px;
 `;
 
-const UnreadBadge = styled.div`
-  background: ${colors.primary};
-  color: ${colors.white};
-  border-radius: 8px;
-  padding: 0px 8px;
-  min-width: 18px;
-  height: 18px;
+const UnreadIndicator = styled.div`
+  color: ${colors.primary};
+  font-size: 12px;
+  font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
-  font-weight: bold;
 `;

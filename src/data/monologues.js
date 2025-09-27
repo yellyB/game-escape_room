@@ -1,90 +1,331 @@
-// 챕터 데이터 구조 (내부 관리용)
+const generateId = () => Math.random().toString(36).substr(2, 9);
+
 export const chapters = [
   {
     id: 'opening',
-    monologue: [
-      [
-        '…여긴 어디지?',
-        '눈을 뜨니 낯선 방. 창문도, 문도 없다.',
-        '공기는 텅 비어 있고, 손끝엔 예전부터 사용하던 내 휴대폰 하나.',
-      ],
-      ['기억을 더듬어보니…'],
-      [
-        '나는 여동생이 너무 미웠다.',
-        '행복하던 그 모습이 꼴 보기 싫어서,',
-        '이 방에 가둬버리려고 했다.',
-      ],
-      ['그런데 눈을 떠보니', '갇힌 건 내가 되어 있었다.', '어떻게 된 거지?'],
-      ['……일단, 나가야 한다.'],
+    step: [
+      {
+        type: 'monologue',
+        data: [
+          '…여긴 어디지?',
+          '눈을 뜨니 낯선 방. 창문도, 문도 없다.',
+          '공기는 텅 비어 있고, 손끝엔 예전부터 사용하던 내 휴대폰 하나.',
+        ],
+      },
+      {
+        type: 'monologue',
+        data: ['기억을 더듬어보니…'],
+      },
+      {
+        type: 'monologue',
+        data: [
+          '나는 여동생이 너무 미웠다.',
+          '행복하던 그 모습이 꼴 보기 싫어서,',
+          '이 방에 가둬버리려고 했다.',
+        ],
+      },
+      {
+        type: 'monologue',
+        data: [
+          '그런데 눈을 떠보니',
+          '갇힌 건 내가 되어 있었다.',
+          '어떻게 된 거지?',
+        ],
+      },
+      {
+        type: 'monologue',
+        data: ['……일단, 나가야 한다.'],
+      },
     ],
     nextChapter: 'conversation_friend',
-    isCompleted: false,
   },
   {
     id: 'conversation_friend',
-    monologue: [
-      [
-        '내가 평소에 잘 웃었던건 진짜로 웃겨서가 아니라',
-        '나 같은 애는 웃는거라도 잘해야',
-        '다른 사람들이 좋아하기 때문이었어',
-      ],
+    step: [
+      { type: 'chatFromOpponent', data: { key: 'friend', partNumber: 1 } },
+      {
+        type: 'chatFromMe',
+        data: {
+          key: 'friend',
+          messages: [
+            {
+              id: generateId(),
+              message: '……난 그냥 없어져도 아무도 모를 줄 알았어.',
+            },
+          ],
+        },
+      },
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'friend', partNumber: 2 },
+      },
+      {
+        type: 'monologue',
+        data: [
+          '내가 평소에 잘 웃었던건 진짜로 웃겨서가 아니라',
+          '나 같은 애는 웃는거라도 잘해야',
+          '다른 사람들이 좋아하기 때문이었어',
+        ],
+      },
+      {
+        type: 'chatFromMe',
+        data: {
+          key: 'friend',
+          messages: [
+            {
+              id: generateId(),
+              message: '…그게 그렇게 중요했어?',
+            },
+          ],
+        },
+      },
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'friend', partNumber: 3 },
+      },
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'friend', partNumber: 4 },
+      },
     ],
-    nextChapter: 'conversation_sister',
-    isCompleted: false,
+    nextChapter: 'conversation_sister_1',
   },
   {
-    id: 'conversation_sister',
-    monologue: [['뭐지? 여동생..?', '어디에 있는거야', '날 보고 있나?']],
+    id: 'conversation_sister_1',
+    step: [
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'sister', partNumber: 1 },
+      },
+      {
+        type: 'monologue',
+        data: ['뭐지? 여동생..?', '어디에 있는거야', '날 보고 있나?'],
+      },
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'sister', partNumber: 2 },
+      },
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'sister', partNumber: 3 },
+      },
+    ],
     nextChapter: 'conversation_mother',
-    isCompleted: false,
   },
   {
     id: 'conversation_mother',
-    monologue: [
-      ['또 엄마가 먼저 사과하신다.', '잘못은 내가 먼저 했는데.'],
-      [
-        '…',
-        '난 어렸을때부터 친구가 별로 없어서 혼자 그림을 그리다보니',
-        '그림을 잘 그리게 되었다.',
-        '그걸 보고 엄마가 자랑스러워하는 모습때문에',
-        '더, 더 열심히 하게 되었다.',
-        '중간부터는 진짜 내가 그림그리는걸 좋아하는건지, 알수도 없게 되어버렸다.',
-      ],
-      [
-        '아냐 난 너무 외롭고 혼자있는 시간이 불안했어.',
-        '하지만 그걸 드러내면 오히려 나를 내칠까봐',
-        '티 낼 수 없었어.',
-        '매일 괜찮은 척 엄마를 속였어.',
-      ],
-      [
-        '외롭다고 너무나도 말하고 싶은데',
-        '엄마한텐 절대 말할수가 없어',
-        '괴로워',
-      ],
+    step: [
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'mother', partNumber: 1 },
+      },
+      {
+        type: 'monologue',
+        data: ['또 엄마가 먼저 사과하신다.', '잘못은 내가 먼저 했는데.'],
+      },
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'mother', partNumber: 2 },
+      },
+      {
+        type: 'monologue',
+        data: [
+          '…',
+          '난 어렸을때부터 친구가 별로 없어서 혼자 그림을 그리다보니',
+          '그림을 잘 그리게 되었다.',
+          '그걸 보고 엄마가 자랑스러워하는 모습때문에',
+          '더, 더 열심히 하게 되었다.',
+          '중간부터는 진짜 내가 그림그리는걸 좋아하는건지, 알수도 없게 되어버렸다.',
+        ],
+      },
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'mother', partNumber: 3 },
+      },
+      {
+        type: 'monologue',
+        data: [
+          '아냐 난 너무 외롭고 혼자있는 시간이 불안했어.',
+          '하지만 그걸 드러내면 오히려 나를 내칠까봐',
+          '티 낼 수 없었어.',
+          '매일 괜찮은 척 엄마를 속였어.',
+        ],
+      },
+      {
+        type: 'chatFromMe',
+        data: {
+          key: 'mother',
+          messages: [{ id: generateId(), message: '엄마..' }],
+        },
+      },
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'mother', partNumber: 4 },
+      },
+      {
+        type: 'monologue',
+        data: [
+          '외롭다고 너무나도 말하고 싶은데',
+          '엄마한텐 절대 말할수가 없어',
+          '괴로워',
+        ],
+      },
+    ],
+    nextChapter: 'conversation_sister_2',
+  },
+  {
+    id: 'conversation_sister_2',
+    step: [
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'sister', partNumber: 3 },
+      },
+      {
+        type: 'monologue',
+        data: ['그만해.. 더 이상 듣고 싶지 않아..'],
+      },
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'sister', partNumber: 4 },
+      },
     ],
     nextChapter: 'conversation_colleague',
-    isCompleted: false,
   },
   {
     id: 'conversation_colleague',
-    monologue: [
-      [
-        '민영씨..',
-        '회사 다니면서 처음으로 생긴 후배라서',
-        '잘 챙겨주고 싶었는데.',
-        '그치만 내가 일을 잘하는것도 아니고',
-        '날 존경한다거나하는 마음도 전혀 없겠지',
-        '괜히 항상 미안한 마음밖에 없다.',
-      ],
+    step: [
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'colleague', partNumber: 1 },
+      },
+      {
+        type: 'monologue',
+        data: [
+          '민영씨..',
+          '회사 다니면서 처음으로 생긴 후배라서',
+          '잘 챙겨주고 싶었는데.',
+        ],
+      },
+      {
+        type: 'chatFromMe',
+        data: {
+          key: 'mother',
+          messages: [{ id: generateId(), message: '못 챙겨줘서 미안해요' }],
+        },
+      },
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'colleague', partNumber: 2 },
+      },
+      {
+        type: 'monologue',
+        data: [
+          '그치만 내가 일을 잘하는것도 아니고',
+          '날 존경한다거나하는 마음도 전혀 없겠지',
+          '괜히 항상 미안한 마음밖에 없다.',
+        ],
+      },
+      {
+        type: 'chatFromMe',
+        data: {
+          key: 'colleague',
+          messages: [
+            { id: generateId(), message: '그건 그냥… 습관처럼 한 거였는데.' },
+          ],
+        },
+      },
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'colleague', partNumber: 3 },
+      },
+    ],
+    nextChapter: 'conversation_sister_3',
+  },
+  {
+    id: 'conversation_sister_3',
+    step: [
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'sister', partNumber: 5 },
+      },
+      {
+        type: 'chatFromMe',
+        data: {
+          key: 'future_self',
+          messages: [
+            { id: generateId(), message: '알아, 난 쓸모 없어.' },
+            { id: generateId(), message: '그냥 죽는게 나을걸.' },
+          ],
+        },
+      },
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'sister', partNumber: 6 },
+      },
     ],
     nextChapter: 'realization',
-    isCompleted: false,
   },
   {
     id: 'realization',
-    monologue: [['……내가, 나를 가둔 거였어.']],
+    step: [
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'sister', partNumber: 7 },
+      },
+      {
+        type: 'chatFromMe',
+        data: {
+          key: 'sister',
+          messages: [
+            { id: generateId(), message: '…맞아. 근데 왜 갇힌 건 나야?' },
+          ],
+        },
+      },
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'sister', partNumber: 8 },
+      },
+      // todo: 배경 이미지 전환
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'sister', partNumber: 9 },
+      },
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'future_self', partNumber: 1 },
+      },
+      {
+        type: 'monologue',
+        data: ['……내가, 나를 가둔 거였어.'],
+      },
+      {
+        type: 'chatFromMe',
+        data: {
+          key: 'sister',
+          messages: [{ id: generateId(), message: '그럴수가' }],
+        },
+      },
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'future_self', partNumber: 2 },
+      },
+      {
+        type: 'chatFromOpponent',
+        data: { key: 'sister', partNumber: 10 },
+      },
+      {
+        type: 'chatFromMe',
+        data: {
+          key: 'future_self',
+          messages: [
+            { id: generateId(), message: '…그래.' },
+            { id: generateId(), message: '이제 도망치지 않을게.' },
+            { id: generateId(), message: '나를 받아들일게.' },
+          ],
+        },
+      },
+    ],
     nextChapter: null,
-    isCompleted: false,
   },
 ];
 

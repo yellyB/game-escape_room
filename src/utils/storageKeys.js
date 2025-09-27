@@ -5,6 +5,8 @@ export const STORAGE_KEYS = {
   CHAT_MESSAGE: characterId => `chat_${characterId}`,
   CHAPTER_PROGRESS: 'chapter_progress',
   MESSAGE_PROGRESS: 'message_progress',
+  STEP_PROGRESS: 'step_progress',
+  UNREAD_MESSAGE: characterId => `unread_${characterId}`,
 };
 
 // 로컬 스토리지 키 생성 헬퍼
@@ -19,6 +21,7 @@ export const storageUtils = {
       localStorage.setItem(storageKey, JSON.stringify(data));
       return true;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('로컬 스토리지 저장 실패:', error);
       return false;
     }
@@ -31,6 +34,7 @@ export const storageUtils = {
       const data = localStorage.getItem(storageKey);
       return data ? JSON.parse(data) : defaultValue;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('로컬 스토리지 불러오기 실패:', error);
       return defaultValue;
     }
@@ -42,6 +46,7 @@ export const storageUtils = {
       const storageKey = getStorageKey(key);
       return localStorage.getItem(storageKey) !== null;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('로컬 스토리지 확인 실패:', error);
       return false;
     }
@@ -54,6 +59,7 @@ export const storageUtils = {
       localStorage.removeItem(storageKey);
       return true;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('로컬 스토리지 삭제 실패:', error);
       return false;
     }
@@ -71,9 +77,42 @@ export const storageUtils = {
         }
       }
 
-      keysToRemove.forEach(key => localStorage.removeItem(key));
+      // 각 키를 개별적으로 삭제
+      keysToRemove.forEach(key => {
+        try {
+          localStorage.removeItem(key);
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.error(`키 삭제 실패: ${key}`, error);
+        }
+      });
+
+      // 추가 검증: 남은 게임 관련 키가 있는지 확인
+      const remainingKeys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(STORAGE_KEYS.PREFIX)) {
+          remainingKeys.push(key);
+        }
+      }
+
+      if (remainingKeys.length > 0) {
+        // eslint-disable-next-line no-console
+        console.warn('일부 게임 데이터가 남아있습니다:', remainingKeys);
+        // 강제로 남은 키들도 삭제
+        remainingKeys.forEach(key => {
+          try {
+            localStorage.removeItem(key);
+          } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error(`강제 삭제 실패: ${key}`, error);
+          }
+        });
+      }
+
       return true;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('로컬 스토리지 전체 삭제 실패:', error);
       return false;
     }
