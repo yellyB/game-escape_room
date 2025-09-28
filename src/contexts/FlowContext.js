@@ -93,15 +93,26 @@ export function FlowProvider({ children }) {
         chat => chat.key === opponentId
       );
 
+      const newMessages = dialogue.messages.map(message => ({
+        ...message,
+        isRead: false,
+      }));
+
       if (existingChatIndex === -1) {
-        return [...prevChats, { key: opponentId, messages: dialogue.messages }];
+        return [
+          ...prevChats,
+          {
+            key: opponentId,
+            messages: newMessages,
+          },
+        ];
       } else {
         const updatedChats = [...prevChats];
         updatedChats[existingChatIndex] = {
           ...updatedChats[existingChatIndex],
           messages: [
             ...updatedChats[existingChatIndex].messages,
-            ...dialogue.messages,
+            ...newMessages,
           ],
         };
         return updatedChats;
