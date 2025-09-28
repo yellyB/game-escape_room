@@ -2,14 +2,22 @@ import React from 'react';
 import styled from 'styled-components';
 import colors from '../../styles/colors';
 import ChatHeader from './ChatHeader';
+import { useFlowManager } from '../../contexts/FlowContext';
 
-export default function ChatList({ chatRooms, onChatSelect }) {
+export default function ChatList({ onChatSelect }) {
+  const { getChatAvailableCharacters, moveNextStep } = useFlowManager();
+
+  const chatAvailableCharacters = getChatAvailableCharacters();
+
   return (
     <ChatListContainer>
       <ChatHeader title="채팅방 목록" />
       <ChatContent>
         <ChatRoomList>
-          {chatRooms.map(room => (
+          <div style={{ color: 'white' }} onClick={() => moveNextStep()}>
+            test
+          </div>
+          {chatAvailableCharacters.map(room => (
             <ChatRoomItem
               key={room.id}
               onClick={() => onChatSelect(room.id)}

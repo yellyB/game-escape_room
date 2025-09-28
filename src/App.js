@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { FlowProvider } from './contexts/FlowContext';
 import StartScreen from './components/StartScreen';
 import GameContainer from './components/GameContainer';
 import './App.css';
@@ -15,9 +16,11 @@ function AppContent() {
 
 function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <FlowProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </FlowProvider>
   );
 }
 

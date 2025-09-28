@@ -6,14 +6,13 @@ import { chapterUtils, loadChapterProgress } from '../data/gameFlow';
 import ChatList from './chat/ChatList';
 import ChatRoom from './chat/ChatRoom';
 import { STORAGE_KEYS, storageUtils } from '../utils/storage';
-import FlowManager from './managers/FlowManager';
+import { useFlowManager } from '../contexts/FlowContext';
 import Monologue from './Monologue';
 import BottomArea from './BottomArea';
 import '../utils/debug'; // 개발자 디버그 기능 로드
 
 export default function GameContainer() {
-  const flowManager = FlowManager();
-  const { currStep, moveNextStep } = flowManager;
+  const { currStepData, moveNextStep } = useFlowManager();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [selectedChat, setSelectedChat] = useState(null);
@@ -34,12 +33,11 @@ export default function GameContainer() {
   };
 
   const handleMonologueEnd = () => {
-    setIsMonologueOpen(false);
     moveNextStep();
   };
 
-  const handleChatSelect = async chatId => {
-    setSelectedChat(chatId);
+  const handleChatSelect = async opponentId => {
+    setSelectedChat(opponentId);
 
     // 현재 스텝이 chatFromOpponent인 경우 해당 채팅방에 들어갔을 때 처리
     if (
@@ -47,26 +45,26 @@ export default function GameContainer() {
       currentChapter.stepss[currentStepIndex]?.type === 'chatFromOpponent'
     ) {
       const currentStep = currentChapter.stepss[currentStepIndex];
-      if (currentStep.data.key === chatId) {
+      if (currentStep.data.key === opponentId) {
         // 4. 플레이어가 해당 채팅방에 입장했다면, 불러왔던 메시지를 로컬스토리지에 저장
         // eslint-disable-next-line no-console
         console.log(
-          `🎯 ${chatId} 채팅방에 들어감 - 메시지 로컬스토리지 저장 및 순차 표시 시작`
+          `🎯 ${opponentId} 채팅방에 들어감 - 메시지 로컬스토리지 저장 및 순차 표시 시작`
         );
-        await handleChatRoomEntry(chatId, currentStep.data);
+        await handleChatRoomEntry(opponentId, currentStep.data);
         return;
       }
     }
 
     // 1. 먼저 로컬 스토리지에서 기존 데이터 확인
     const savedMessages = storageUtils.get(
-      STORAGE_KEYS.CHAT_MESSAGE(chatId),
+      STORAGE_KEYS.CHAT_MESSAGE(opponentId),
       []
     );
 
     // 2. 안읽은 메시지가 있는지 확인
     const hasUnreadMessages = storageUtils.get(
-      STORAGE_KEYS.UNREAD_MESSAGE(chatId),
+      STORAGE_KEYS.UNREAD_MESSAGE(opponentId),
       false
     );
 
@@ -74,17 +72,17 @@ export default function GameContainer() {
     const hasLocal = savedMessages.length > 0;
     setHasLocalData(prev => ({
       ...prev,
-      [chatId]: hasLocal,
+      [opponentId]: hasLocal,
     }));
 
     // 4. 안읽은 메시지가 있으면 플래그 해제 (최초 읽음 처리)
     if (hasUnreadMessages) {
-      storageUtils.set(STORAGE_KEYS.UNREAD_MESSAGE(chatId), false);
+      storageUtils.set(STORAGE_KEYS.UNREAD_MESSAGE(opponentId), false);
 
       // 채팅방 목록에서 안읽음 상태 업데이트
       setAvailableChats(prev =>
         prev.map(chat =>
-          chat.id === chatId
+          chat.id === opponentId
             ? {
                 ...chat,
                 unread: 0,
@@ -97,7 +95,7 @@ export default function GameContainer() {
       );
 
       // 대기 중인 채팅 스텝이 있고, 해당 채팅방을 읽은 경우 다음 스텝으로 진행 (제거됨)
-      // if (pendingChatStep && pendingChatStep.key === chatId) {
+      // if (pendingChatStep && pendingChatStep.key === opponentId) {
       //   setPendingChatStep(null);
       //   goToNextStep();
       // }
@@ -108,7 +106,7 @@ export default function GameContainer() {
     // if (
     //   currentChapter &&
     //   currentChapter.steps[currentStepIndex]?.type === 'chatFromOpponent' &&
-    //   currentChapter.steps[currentStepIndex].data.key === chatId &&
+    //   currentChapter.steps[currentStepIndex].data.key === opponentId &&
     //   hasUnreadMessages
     // ) {
     //   // 메시지를 읽었으므로 다음 스텝으로 진행
@@ -121,22 +119,22 @@ export default function GameContainer() {
     }
 
     // 6. 로컬 스토리지에 데이터가 없으면 API에서 가져오기
-    if (!dialogueData[chatId]) {
+    if (!dialogueData[opponentId]) {
       try {
         const dialogue = await getDialogue({
-          characterId: chatId,
+          opponentId: opponentId,
           partNumber: 1,
         });
         setDialogueData(prev => ({
           ...prev,
-          [chatId]: dialogue,
+          [opponentId]: dialogue,
         }));
 
         // 안읽은 메시지 플래그 설정
-        storageUtils.set(STORAGE_KEYS.UNREAD_MESSAGE(chatId), true);
+        storageUtils.set(STORAGE_KEYS.UNREAD_MESSAGE(opponentId), true);
       } catch (error) {
         // eslint-disable-next-line no-console
-        console.error(`${chatId} 캐릭터 대화 데이터 로딩 실패:`, error);
+        console.error(`${opponentId} 캐릭터 대화 데이터 로딩 실패:`, error);
       }
     }
   };
@@ -145,7 +143,7 @@ export default function GameContainer() {
     setSelectedChat(null);
   };
 
-  const handleSendMessage = (chatId, message) => {
+  const handleSendMessage = (opponentId, message) => {
     const newMessage = {
       text: message,
       isOwn: true,
@@ -153,9 +151,12 @@ export default function GameContainer() {
     };
 
     // 로컬 스토리지에 사용자 메시지 추가
-    const messages = storageUtils.get(STORAGE_KEYS.CHAT_MESSAGE(chatId), []);
+    const messages = storageUtils.get(
+      STORAGE_KEYS.CHAT_MESSAGE(opponentId),
+      []
+    );
     messages.push(newMessage);
-    storageUtils.set(STORAGE_KEYS.CHAT_MESSAGE(chatId), messages);
+    storageUtils.set(STORAGE_KEYS.CHAT_MESSAGE(opponentId), messages);
   };
 
   const handleScreenClick = () => {
@@ -206,7 +207,7 @@ export default function GameContainer() {
   }, [currentChapter?.id, currentStepIndex, currentTextIndex]);
 
   // 캐릭터 이름 매핑
-  const getCharacterName = useCallback(chatId => {
+  const getCharacterName = useCallback(opponentId => {
     const nameMap = {
       friend: '👭 친구 (수정)',
       sister: '👧 여동생 (과거의 나)',
@@ -214,7 +215,7 @@ export default function GameContainer() {
       colleague: '🧑‍💻 회사 후배',
       future_self: '🔮 미래의 나',
     };
-    return nameMap[chatId] || chatId;
+    return nameMap[opponentId] || opponentId;
   }, []);
 
   const handleMyMessage = useCallback(
@@ -226,13 +227,13 @@ export default function GameContainer() {
       const { key, messages } = data;
 
       // key를 채팅방 ID로 사용
-      const chatId = key;
+      const opponentId = key;
 
       // 1.5초 딜레이 후 메시지를 화면에 표시
       setTimeout(() => {
         // 내 메시지들을 로컬 스토리지에 저장
         const existingMessages = storageUtils.get(
-          STORAGE_KEYS.CHAT_MESSAGE(chatId),
+          STORAGE_KEYS.CHAT_MESSAGE(opponentId),
           []
         );
 
@@ -244,18 +245,21 @@ export default function GameContainer() {
         }));
 
         const updatedMessages = [...existingMessages, ...newMessages];
-        storageUtils.set(STORAGE_KEYS.CHAT_MESSAGE(chatId), updatedMessages);
+        storageUtils.set(
+          STORAGE_KEYS.CHAT_MESSAGE(opponentId),
+          updatedMessages
+        );
 
         // 채팅방 목록 업데이트
         setAvailableChats(prev => {
-          const existingChat = prev.find(chat => chat.id === chatId);
+          const existingChat = prev.find(chat => chat.id === opponentId);
           const lastMessage =
             newMessages[newMessages.length - 1]?.text || '메시지를 보냈습니다';
 
           if (existingChat) {
             // 기존 채팅방 업데이트
             return prev.map(chat =>
-              chat.id === chatId
+              chat.id === opponentId
                 ? {
                     ...chat,
                     lastMessage: lastMessage,
@@ -268,7 +272,7 @@ export default function GameContainer() {
             return [
               ...prev,
               {
-                id: chatId,
+                id: opponentId,
                 name: getCharacterName(key),
                 lastMessage: lastMessage,
                 time: '방금 전',
@@ -280,7 +284,7 @@ export default function GameContainer() {
 
         // eslint-disable-next-line no-console
         console.log(
-          `💬 ${chatId}에게 메시지 전송: ${newMessages.map(m => m.text).join(', ')}`
+          `💬 ${opponentId}에게 메시지 전송: ${newMessages.map(m => m.text).join(', ')}`
         );
       }, 1500); // 1.5초 딜레이
     },
@@ -360,7 +364,7 @@ export default function GameContainer() {
       // eslint-disable-next-line no-console
       console.log(`📡 API 호출: ${key} 파트 ${partNumber} 데이터 요청`);
       const dialogue = await getDialogue({
-        characterId: key,
+        opponentId: key,
         partNumber: partNumber,
       });
 
@@ -419,13 +423,13 @@ export default function GameContainer() {
   };
 
   // 채팅방 입장 시 메시지 처리 - 4, 5, 6단계
-  const handleChatRoomEntry = async (chatId, stepData) => {
+  const handleChatRoomEntry = async (opponentId, stepData) => {
     const { key, partNumber } = stepData;
 
     try {
       // API에서 데이터 다시 불러오기 (캐시된 데이터 사용)
       const dialogue = await getDialogue({
-        characterId: key,
+        opponentId: key,
         partNumber: partNumber,
       });
 
@@ -462,15 +466,15 @@ export default function GameContainer() {
   };
 
   const handleMessageRead = useCallback(
-    chatId => {
+    opponentId => {
       // 현재 스텝이 chatFromOpponent 또는 chatFromMe이고 해당 채팅방인 경우, 메시지를 읽었을 때만 다음 스텝으로 진행
       const currentStep = currentChapter?.steps[currentStepIndex];
       const isChatFromOpponent = currentStep?.type === 'chatFromOpponent';
       const isChatFromMe = currentStep?.type === 'chatFromMe';
 
       const isMatchingChat =
-        (isChatFromOpponent && currentStep.data.key === chatId) ||
-        (isChatFromMe && currentStep.data.key === chatId);
+        (isChatFromOpponent && currentStep.data.key === opponentId) ||
+        (isChatFromMe && currentStep.data.key === opponentId);
 
       if (
         currentChapter &&
@@ -482,7 +486,7 @@ export default function GameContainer() {
         if (currentStep.type === 'chatFromOpponent') {
           // 상대방 메시지인 경우 읽음 처리
           const messages = storageUtils.get(
-            STORAGE_KEYS.CHAT_MESSAGE(chatId),
+            STORAGE_KEYS.CHAT_MESSAGE(opponentId),
             []
           );
           const updatedMessages = messages.map(msg => {
@@ -491,12 +495,15 @@ export default function GameContainer() {
             }
             return msg;
           });
-          storageUtils.set(STORAGE_KEYS.CHAT_MESSAGE(chatId), updatedMessages);
+          storageUtils.set(
+            STORAGE_KEYS.CHAT_MESSAGE(opponentId),
+            updatedMessages
+          );
 
           // 채팅방 목록에서 안읽음 상태 업데이트
           setAvailableChats(prev =>
             prev.map(chat =>
-              chat.id === chatId
+              chat.id === opponentId
                 ? {
                     ...chat,
                     unread: 0, // 안읽음 없음
@@ -509,7 +516,7 @@ export default function GameContainer() {
           );
 
           // 안읽은 메시지 플래그 해제
-          storageUtils.set(STORAGE_KEYS.UNREAD_MESSAGE(chatId), false);
+          storageUtils.set(STORAGE_KEYS.UNREAD_MESSAGE(opponentId), false);
         }
         // 내 메시지인 경우 별도 처리 없이 바로 다음 스텝으로 진행
 
@@ -539,10 +546,13 @@ export default function GameContainer() {
     const chatIds = ['friend', 'sister', 'mother', 'colleague', 'future_self'];
     const existingChats = [];
 
-    chatIds.forEach(chatId => {
-      const messages = storageUtils.get(STORAGE_KEYS.CHAT_MESSAGE(chatId), []);
+    chatIds.forEach(opponentId => {
+      const messages = storageUtils.get(
+        STORAGE_KEYS.CHAT_MESSAGE(opponentId),
+        []
+      );
       const hasUnreadMessages = storageUtils.get(
-        STORAGE_KEYS.UNREAD_MESSAGE(chatId),
+        STORAGE_KEYS.UNREAD_MESSAGE(opponentId),
         false
       );
 
@@ -556,8 +566,8 @@ export default function GameContainer() {
         };
 
         existingChats.push({
-          id: chatId,
-          name: nameMap[chatId] || chatId,
+          id: opponentId,
+          name: nameMap[opponentId] || opponentId,
           lastMessage: hasUnreadMessages
             ? '새로운 메시지가 있습니다'
             : messages[messages.length - 1]?.text || '대화를 시작하세요',
@@ -595,10 +605,10 @@ export default function GameContainer() {
   };
 
   // 대화 데이터를 가져오는 함수
-  const getChatMessagesForRoom = chatId => {
+  const getChatMessagesForRoom = opponentId => {
     // 로컬 스토리지에서 메시지 불러오기
     const savedMessages = storageUtils.get(
-      STORAGE_KEYS.CHAT_MESSAGE(chatId),
+      STORAGE_KEYS.CHAT_MESSAGE(opponentId),
       []
     );
 
@@ -614,7 +624,7 @@ export default function GameContainer() {
       {isChatOpen &&
         (selectedChat ? (
           <ChatRoom
-            chatId={selectedChat}
+            opponentId={selectedChat}
             messages={getChatMessagesForRoom(selectedChat)}
             onBack={handleBackToList}
             onSendMessage={handleSendMessage}
@@ -627,7 +637,7 @@ export default function GameContainer() {
           />
         ) : (
           <ChatList
-            chatRooms={getChatRoomsFromCharacters()}
+            // chatRooms={getChatRoomsFromCharacters()}
             onChatSelect={handleChatSelect}
           />
         ))}
@@ -643,8 +653,8 @@ export default function GameContainer() {
             </PendingChatMessage>
           </PendingChatOverlay>
         )}
-      {currStep.type === 'monologue' && (
-        <Monologue texts={currStep.data} onEnd={handleMonologueEnd} />
+      {currStepData.type === 'monologue' && (
+        <Monologue texts={currStepData.data} onEnd={handleMonologueEnd} />
       )}
     </GameContainerWrapper>
   );

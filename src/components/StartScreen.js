@@ -2,20 +2,19 @@ import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { getCharacters } from '../services/api';
-import FlowManager from './managers/FlowManager';
+import { useFlowManager } from '../contexts/FlowContext';
 
 export default function StartScreen() {
   const navigate = useNavigate();
 
-  const flowManager = FlowManager();
-  const { setCurrFlow, setCharacters } = flowManager;
+  const { setCurrStepKey } = useFlowManager();
 
   const handleStartGame = async () => {
-    setCurrFlow({ id: 'opening', index: 0 });
+    setCurrStepKey({ id: 'opening', index: 0 });
     navigate('/game');
 
-    const charactersData = await getCharacters();
-    setCharacters(charactersData);
+    // const charactersData = await getCharacters();
+    // setCharacters(charactersData);
   };
 
   return (
