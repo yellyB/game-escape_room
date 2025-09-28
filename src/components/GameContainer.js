@@ -9,13 +9,12 @@ import { STORAGE_KEYS, storageUtils } from '../utils/storage';
 import { useFlowManager } from '../contexts/FlowContext';
 import Monologue from './Monologue';
 import BottomArea from './BottomArea';
-import '../utils/debug'; // 개발자 디버그 기능 로드
 
 export default function GameContainer() {
   const { currStepData, moveNextStep } = useFlowManager();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [selectedChat, setSelectedChat] = useState(null);
+  const [selectedChatRoomId, setSelectedChatRoomId] = useState(null);
   const [isMonologueOpen, setIsMonologueOpen] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
@@ -28,7 +27,7 @@ export default function GameContainer() {
   const handlePhoneClick = () => {
     setIsChatOpen(!isChatOpen);
     if (isChatOpen) {
-      setSelectedChat(null);
+      setSelectedChatRoomId(null);
     }
   };
 
@@ -37,15 +36,22 @@ export default function GameContainer() {
   };
 
   const handleChatSelect = async opponentId => {
-    setSelectedChat(opponentId);
+    setSelectedChatRoomId(opponentId);
 
     // 현재 스텝이 chatFromOpponent인 경우 해당 채팅방에 들어갔을 때 처리
     if (
       currentChapter &&
+      currentChapter.stepss &&
+      currentStepIndex >= 0 &&
+      currentStepIndex < currentChapter.stepss.length &&
       currentChapter.stepss[currentStepIndex]?.type === 'chatFromOpponent'
     ) {
       const currentStep = currentChapter.stepss[currentStepIndex];
-      if (currentStep.data.key === opponentId) {
+      if (
+        currentStep &&
+        currentStep.data &&
+        currentStep.data.key === opponentId
+      ) {
         // 4. 플레이어가 해당 채팅방에 입장했다면, 불러왔던 메시지를 로컬스토리지에 저장
         // eslint-disable-next-line no-console
         console.log(
@@ -140,7 +146,7 @@ export default function GameContainer() {
   };
 
   const handleBackToList = () => {
-    setSelectedChat(null);
+    setSelectedChatRoomId(null);
   };
 
   const handleSendMessage = (opponentId, message) => {
@@ -599,11 +605,6 @@ export default function GameContainer() {
     setIsMonologueOpen(false);
   }, [currentChapter]);
 
-  // 사용 가능한 채팅방 목록 반환
-  const getChatRoomsFromCharacters = () => {
-    return availableChats;
-  };
-
   // 대화 데이터를 가져오는 함수
   const getChatMessagesForRoom = opponentId => {
     // 로컬 스토리지에서 메시지 불러오기
@@ -622,24 +623,21 @@ export default function GameContainer() {
     >
       <BottomArea onChatOpenClick={handlePhoneClick} />
       {isChatOpen &&
-        (selectedChat ? (
+        (selectedChatRoomId ? (
           <ChatRoom
-            opponentId={selectedChat}
-            messages={getChatMessagesForRoom(selectedChat)}
+            opponentId={selectedChatRoomId}
+            messages={getChatMessagesForRoom(selectedChatRoomId)}
             onBack={handleBackToList}
             onSendMessage={handleSendMessage}
-            isLocalData={hasLocalData[selectedChat] || false}
+            isLocalData={hasLocalData[selectedChatRoomId] || false}
             isFirstRead={storageUtils.get(
-              STORAGE_KEYS.UNREAD_MESSAGE(selectedChat),
+              STORAGE_KEYS.UNREAD_MESSAGE(selectedChatRoomId),
               false
             )}
             onMessageRead={handleMessageRead}
           />
         ) : (
-          <ChatList
-            // chatRooms={getChatRoomsFromCharacters()}
-            onChatSelect={handleChatSelect}
-          />
+          <ChatList onChatSelect={handleChatSelect} />
         ))}
       {/* 현재 스텝이 chatFromOpponent인 경우 안내 메시지 */}
       {currentChapter &&

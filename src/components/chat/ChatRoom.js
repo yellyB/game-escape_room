@@ -3,9 +3,10 @@ import styled from 'styled-components';
 import colors from '../../styles/colors';
 import ChatHeader from './ChatHeader';
 import { STORAGE_KEYS, storageUtils } from '../../utils/storage';
+import { useFlowManager } from '../../contexts/FlowContext';
 
 export default function ChatRoom({
-  chatId,
+  opponentId,
   messages,
   onBack,
   onSendMessage,
@@ -13,6 +14,8 @@ export default function ChatRoom({
   isFirstRead = false,
   onMessageRead,
 }) {
+  const { getChatMessagesByOpponentId } = useFlowManager();
+
   const [inputMessage, setInputMessage] = useState('');
   const [displayedMessages, setDisplayedMessages] = useState([]);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
@@ -22,168 +25,171 @@ export default function ChatRoom({
   const inputRef = useRef(null);
 
   // 채팅방이 변경될 때만 초기화
-  useEffect(() => {
-    setDisplayedMessages([]);
-    setCurrentMessageIndex(0);
-    setIsWaitingForInput(false);
-    setIsTyping(false);
-    setInputMessage('');
-  }, [chatId]);
+  // useEffect(() => {
+  //   setDisplayedMessages([]);
+  //   setCurrentMessageIndex(0);
+  //   setIsWaitingForInput(false);
+  //   setIsTyping(false);
+  //   setInputMessage('');
+  // }, [opponentId]);
 
-  // 메시지가 변경될 때 처리
-  useEffect(() => {
-    // 로컬 데이터인 경우 처리
-    if (isLocalData && messages.length > 0) {
-      // if (myMessages.length > 0) {
-      //   // 내 메시지가 있으면 순차적으로 표시하도록 처리
-      //   setDisplayedMessages([]);
-      //   setCurrentMessageIndex(0);
-      //   setIsTyping(false);
-      //   setIsWaitingForInput(false);
-      // } else {
-      // 내 메시지가 없으면 기존 메시지들을 한번에 표시
-      setDisplayedMessages(messages);
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage && lastMessage.isOwn) {
-        setIsWaitingForInput(true);
-        setTimeout(() => {
-          inputRef.current?.focus();
-        }, 500);
-      }
-      // 로컬 데이터인 경우 읽지않은 메시지가 있으면 읽음 처리
-      const hasUnreadMessages = messages.some(msg => msg.isUnread);
-      if (hasUnreadMessages && onMessageRead) {
-        onMessageRead(chatId);
-      }
-      // }
-    }
-  }, [messages, isLocalData, chatId, onMessageRead]);
+  // // 메시지가 변경될 때 처리
+  // useEffect(() => {
+  //   // 로컬 데이터인 경우 처리
+  //   if (isLocalData && messages.length > 0) {
+  //     // if (myMessages.length > 0) {
+  //     //   // 내 메시지가 있으면 순차적으로 표시하도록 처리
+  //     //   setDisplayedMessages([]);
+  //     //   setCurrentMessageIndex(0);
+  //     //   setIsTyping(false);
+  //     //   setIsWaitingForInput(false);
+  //     // } else {
+  //     // 내 메시지가 없으면 기존 메시지들을 한번에 표시
+  //     setDisplayedMessages(messages);
+  //     const lastMessage = messages[messages.length - 1];
+  //     if (lastMessage && lastMessage.isOwn) {
+  //       setIsWaitingForInput(true);
+  //       setTimeout(() => {
+  //         inputRef.current?.focus();
+  //       }, 500);
+  //     }
+  //     // 로컬 데이터인 경우 읽지않은 메시지가 있으면 읽음 처리
+  //     const hasUnreadMessages = messages.some(msg => msg.isUnread);
+  //     if (hasUnreadMessages && onMessageRead) {
+  //       onMessageRead(opponentId);
+  //     }
+  //     // }
+  //   }
+  // }, [messages, isLocalData, opponentId, onMessageRead]);
 
-  // 최초 읽을 때 입력중 표시 (읽지않은 메시지가 있을 때만)
-  useEffect(() => {
-    if (isFirstRead && messages.length > 0 && !isLocalData) {
-      const unreadMessages = messages.filter(msg => msg.isUnread);
-      if (unreadMessages.length > 0) {
-        setIsTyping(true);
-        // 2초 후 입력중 표시 제거하고 메시지 표시 시작
-        setTimeout(() => {
-          setIsTyping(false);
-        }, 2000);
-      }
-    }
-  }, [isFirstRead, messages.length, isLocalData, messages]);
+  // // 최초 읽을 때 입력중 표시 (읽지않은 메시지가 있을 때만)
+  // useEffect(() => {
+  //   if (isFirstRead && messages.length > 0 && !isLocalData) {
+  //     const unreadMessages = messages.filter(msg => msg.isUnread);
+  //     if (unreadMessages.length > 0) {
+  //       setIsTyping(true);
+  //       // 2초 후 입력중 표시 제거하고 메시지 표시 시작
+  //       setTimeout(() => {
+  //         setIsTyping(false);
+  //       }, 2000);
+  //     }
+  //   }
+  // }, [isFirstRead, messages.length, isLocalData, messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // 메시지를 줄바꿈으로 분리하는 함수
-  const splitMessageIntoBubbles = text => {
-    return text.split('\n').filter(line => line.trim() !== '');
-  };
+  // // 메시지를 줄바꿈으로 분리하는 함수
+  // const splitMessageIntoBubbles = text => {
+  //   return text.split('\n').filter(line => line.trim() !== '');
+  // };
 
-  // 읽지않은 메시지와 내 메시지를 순차적으로 표시
-  useEffect(() => {
-    // 로컬 데이터이거나 API 데이터인 경우 모두 처리
-    if (true) {
-      // 읽지않은 메시지와 내 메시지 필터링
-      const unreadMessages = messages.filter(msg => msg.isUnread);
-      const myMessages = messages.filter(
-        msg => msg.isOwn && (msg.isUnread === undefined || !msg.isUnread)
-      );
+  // // 읽지않은 메시지와 내 메시지를 순차적으로 표시
+  // useEffect(() => {
+  //   // 로컬 데이터이거나 API 데이터인 경우 모두 처리
+  //   if (true) {
+  //     // 읽지않은 메시지와 내 메시지 필터링
+  //     const unreadMessages = messages.filter(msg => msg.isUnread);
+  //     const myMessages = messages.filter(
+  //       msg => msg.isOwn && (msg.isUnread === undefined || !msg.isUnread)
+  //     );
 
-      // 이미 표시된 원본 메시지 ID들 (버블 ID가 아닌 원본 ID)
-      const displayedOriginalIds = displayedMessages
-        .map(msg => msg.originalId || msg.id)
-        .filter((id, index, arr) => arr.indexOf(id) === index); // 중복 제거
+  //     // 이미 표시된 원본 메시지 ID들 (버블 ID가 아닌 원본 ID)
+  //     const displayedOriginalIds = displayedMessages
+  //       .map(msg => msg.originalId || msg.id)
+  //       .filter((id, index, arr) => arr.indexOf(id) === index); // 중복 제거
 
-      // 아직 표시되지 않은 메시지들만 필터링
-      const newUnreadMessages = unreadMessages.filter(
-        msg => !displayedOriginalIds.includes(msg.id)
-      );
-      const newMyMessages = myMessages.filter(
-        msg => !displayedOriginalIds.includes(msg.id)
-      );
-      const allNewMessages = [...newUnreadMessages, ...newMyMessages];
+  //     // 아직 표시되지 않은 메시지들만 필터링
+  //     const newUnreadMessages = unreadMessages.filter(
+  //       msg => !displayedOriginalIds.includes(msg.id)
+  //     );
+  //     const newMyMessages = myMessages.filter(
+  //       msg => !displayedOriginalIds.includes(msg.id)
+  //     );
+  //     const allNewMessages = [...newUnreadMessages, ...newMyMessages];
 
-      // eslint-disable-next-line no-console
-      console.log('💬 ChatRoom 메시지 필터링:', {
-        totalMessages: messages.length,
-        unreadMessages: unreadMessages.length,
-        myMessages: myMessages.length,
-        newUnreadMessages: newUnreadMessages.length,
-        newMyMessages: newMyMessages.length,
-        allNewMessages: allNewMessages.length,
-        displayedMessages: displayedMessages.length,
-        displayedOriginalIds: displayedOriginalIds,
-      });
-      // 새로 표시할 메시지가 있고, 아직 표시하지 않은 메시지가 있을 때만 처리
-      if (
-        allNewMessages.length > 0 &&
-        currentMessageIndex < allNewMessages.length
-      ) {
-        const currentMessage = allNewMessages[currentMessageIndex];
-        const currentPartNumber = currentMessage.partNumber; // 내 메시지는 partNumber가 없을 수 있음
+  //     // eslint-disable-next-line no-console
+  //     console.log('💬 ChatRoom 메시지 필터링:', {
+  //       totalMessages: messages.length,
+  //       unreadMessages: unreadMessages.length,
+  //       myMessages: myMessages.length,
+  //       newUnreadMessages: newUnreadMessages.length,
+  //       newMyMessages: newMyMessages.length,
+  //       allNewMessages: allNewMessages.length,
+  //       displayedMessages: displayedMessages.length,
+  //       displayedOriginalIds: displayedOriginalIds,
+  //     });
+  //     // 새로 표시할 메시지가 있고, 아직 표시하지 않은 메시지가 있을 때만 처리
+  //     if (
+  //       allNewMessages.length > 0 &&
+  //       currentMessageIndex < allNewMessages.length
+  //     ) {
+  //       const currentMessage = allNewMessages[currentMessageIndex];
+  //       const currentPartNumber = currentMessage.partNumber; // 내 메시지는 partNumber가 없을 수 있음
 
-        if (!currentPartNumber) return;
+  //       if (!currentPartNumber) return;
 
-        // 새로 표시할 메시지가 있으면 먼저 입력중 표시
-        setIsTyping(true);
+  //       // 새로 표시할 메시지가 있으면 먼저 입력중 표시
+  //       setIsTyping(true);
 
-        // 입력중 표시 후 메시지 표시 (1초 딜레이)
-        setTimeout(() => {
-          setIsTyping(false);
+  //       // 입력중 표시 후 메시지 표시 (1초 딜레이)
+  //       setTimeout(() => {
+  //         setIsTyping(false);
 
-          // 순차적 메시지 표시
-          const messageBubbles = splitMessageIntoBubbles(currentMessage.text);
+  //         // 순차적 메시지 표시
+  //         const messageBubbles = splitMessageIntoBubbles(currentMessage.text);
 
-          // 각 줄을 개별 버블로 추가
-          messageBubbles.forEach((bubbleText, bubbleIndex) => {
-            setDisplayedMessages(prev => [
-              ...prev,
-              {
-                ...currentMessage,
-                text: bubbleText,
-                id: `${currentMessageIndex}-${bubbleIndex}`,
-                originalId: currentMessage.id, // 원본 메시지 ID 보존
-              },
-            ]);
+  //         // 각 줄을 개별 버블로 추가
+  //         messageBubbles.forEach((bubbleText, bubbleIndex) => {
+  //           setDisplayedMessages(prev => [
+  //             ...prev,
+  //             {
+  //               ...currentMessage,
+  //               text: bubbleText,
+  //               id: `${currentMessageIndex}-${bubbleIndex}`,
+  //               originalId: currentMessage.id, // 원본 메시지 ID 보존
+  //             },
+  //           ]);
 
-            // 마지막 버블이면 다음 메시지로 진행
-            if (bubbleIndex === messageBubbles.length - 1) {
-              const isLastUnreadMessageInPart =
-                currentMessageIndex === allNewMessages.length - 1 ||
-                allNewMessages[currentMessageIndex + 1].partNumber !==
-                  currentPartNumber;
-              if (isLastUnreadMessageInPart) {
-                // 현재 파트의 마지막 읽지않은 메시지면 파트 완료 처리
-                setTimeout(() => {
-                  storageUtils.set(STORAGE_KEYS.CHAT_MESSAGE(chatId), messages);
-                  setCurrentMessageIndex(prev => prev + 1);
-                  // 현재 파트의 모든 읽지않은 메시지를 읽었을 때 부모 컴포넌트에 알림
-                  if (onMessageRead) {
-                    onMessageRead(chatId);
-                  }
-                }, 200); // 즉시 저장
-              } else {
-                // 같은 파트 내의 다음 읽지않은 메시지로 진행
-                setTimeout(() => {
-                  setCurrentMessageIndex(prev => prev + 1);
-                }, 1500); // 1.5초 대기
-              }
-            }
-          });
-        }, 1000); // 1초 입력중 표시
-      }
-    }
-  }, [
-    currentMessageIndex,
-    messages,
-    isLocalData,
-    chatId,
-    onMessageRead,
-    displayedMessages,
-  ]);
+  //           // 마지막 버블이면 다음 메시지로 진행
+  //           if (bubbleIndex === messageBubbles.length - 1) {
+  //             const isLastUnreadMessageInPart =
+  //               currentMessageIndex === allNewMessages.length - 1 ||
+  //               allNewMessages[currentMessageIndex + 1].partNumber !==
+  //                 currentPartNumber;
+  //             if (isLastUnreadMessageInPart) {
+  //               // 현재 파트의 마지막 읽지않은 메시지면 파트 완료 처리
+  //               setTimeout(() => {
+  //                 storageUtils.set(
+  //                   STORAGE_KEYS.CHAT_MESSAGE(opponentId),
+  //                   messages
+  //                 );
+  //                 setCurrentMessageIndex(prev => prev + 1);
+  //                 // 현재 파트의 모든 읽지않은 메시지를 읽었을 때 부모 컴포넌트에 알림
+  //                 if (onMessageRead) {
+  //                   onMessageRead(opponentId);
+  //                 }
+  //               }, 200); // 즉시 저장
+  //             } else {
+  //               // 같은 파트 내의 다음 읽지않은 메시지로 진행
+  //               setTimeout(() => {
+  //                 setCurrentMessageIndex(prev => prev + 1);
+  //               }, 1500); // 1.5초 대기
+  //             }
+  //           }
+  //         });
+  //       }, 1000); // 1초 입력중 표시
+  //     }
+  //   }
+  // }, [
+  //   currentMessageIndex,
+  //   messages,
+  //   isLocalData,
+  //   opponentId,
+  //   onMessageRead,
+  //   displayedMessages,
+  // ]);
 
   useEffect(() => {
     scrollToBottom();
@@ -191,7 +197,7 @@ export default function ChatRoom({
 
   const handleSend = () => {
     if (inputMessage.trim()) {
-      onSendMessage(chatId, inputMessage);
+      onSendMessage(opponentId, inputMessage);
       setInputMessage('');
       setIsWaitingForInput(false);
       // 메시지 전송 후 다음 메시지로 진행
@@ -212,12 +218,27 @@ export default function ChatRoom({
     <ChatRoomContainer>
       <ChatHeader title="채팅방" onBack={onBack} />
 
+      <div
+        style={{ color: 'white' }}
+        onClick={() =>
+          console.log(
+            'fsdfdsfsdfsdfdsfs:',
+            getChatMessagesByOpponentId(opponentId)
+          )
+        }
+      >
+        testestets
+      </div>
       <ChatContent>
-        {displayedMessages.map((message, index) => (
-          <MessageBubble key={`${message.id}-${index}`} isOwn={message.isOwn}>
-            {message.text}
-          </MessageBubble>
-        ))}
+        {getChatMessagesByOpponentId(opponentId).map(message => {
+          console.log('message:', message);
+          return (
+            <MessageBubble key={message.id} isOwn={message.isSentFromMe}>
+              {message.message}
+            </MessageBubble>
+          );
+        })}
+
         {isTyping && (
           <TypingIndicator>
             <TypingDots>

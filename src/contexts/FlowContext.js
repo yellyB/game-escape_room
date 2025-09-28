@@ -7,6 +7,7 @@ import React, {
   useState,
 } from 'react';
 import { chapters } from '../data/gameFlow';
+import { getDialogue } from '../services/api';
 
 const INITIAL_STEP_KEY = { id: 'opening', index: 0 };
 const INITIAL_CHARACTERS = [
@@ -52,6 +53,10 @@ export function FlowProvider({ children }) {
     return characters.filter(character => character.isChatAvailable);
   };
 
+  const getChatMessagesByOpponentId = opponentId => {
+    return chats.find(chat => chat.key === opponentId)?.messages || [];
+  };
+
   const turnToChatAvailable = useCallback(id => {
     console.log('turnToChatAvailable 호출됨, id:', id);
     setCharacters(prevCharacters => {
@@ -69,9 +74,39 @@ export function FlowProvider({ children }) {
     console.log('=============1:', characters);
   };
 
-  const startChatFromOpponent = opponentId => {
+  const startChatFromOpponent = async data => {
+    const { key: opponentId, partNumber } = data;
     console.log('=============2:', opponentId);
     turnToChatAvailable(opponentId);
+
+    const dialogue = await getDialogue({
+      characterId: opponentId,
+      partNumber,
+    });
+    console.log('1111111111 dialogue:', dialogue);
+
+    const temp = { key: opponentId, messages: dialogue.messages };
+    console.log('1111111111 temp:', temp);
+
+    setChats(prevChats => {
+      const existingChatIndex = prevChats.findIndex(
+        chat => chat.key === opponentId
+      );
+
+      if (existingChatIndex === -1) {
+        return [...prevChats, { key: opponentId, messages: dialogue.messages }];
+      } else {
+        const updatedChats = [...prevChats];
+        updatedChats[existingChatIndex] = {
+          ...updatedChats[existingChatIndex],
+          messages: [
+            ...updatedChats[existingChatIndex].messages,
+            ...dialogue.messages,
+          ],
+        };
+        return updatedChats;
+      }
+    });
   };
 
   const startChatFromMe = () => {
@@ -90,7 +125,7 @@ export function FlowProvider({ children }) {
         startMonologue();
         break;
       case 'chatFromOpponent':
-        startChatFromOpponent(nextStepData.data.key);
+        startChatFromOpponent(nextStepData.data);
         break;
       case 'chatFromMe':
         startChatFromMe();
@@ -115,6 +150,7 @@ export function FlowProvider({ children }) {
     moveNextStep,
     turnToChatAvailable,
     getChatAvailableCharacters,
+    getChatMessagesByOpponentId,
   };
 
   return <FlowContext.Provider value={value}>{children}</FlowContext.Provider>;
