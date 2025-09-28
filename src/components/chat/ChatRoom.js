@@ -214,7 +214,7 @@ export default function ChatRoom({
 
       <ChatContent>
         {displayedMessages.map((message, index) => (
-          <MessageBubble key={message.id || index} isOwn={message.isOwn}>
+          <MessageBubble key={`${message.id}-${index}`} isOwn={message.isOwn}>
             {message.text}
           </MessageBubble>
         ))}

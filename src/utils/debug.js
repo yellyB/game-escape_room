@@ -1,5 +1,5 @@
 // 개발자용 디버그 유틸리티
-import { chapterUtils } from '../data/monologues';
+import { chapterUtils } from '../data/gameFlow';
 
 // 개발자 콘솔에서 사용할 수 있는 전역 함수들
 window.debugGame = {

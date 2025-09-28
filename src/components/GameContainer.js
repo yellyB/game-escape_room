@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
+import { getCharacters, getDialogue } from '../services/api';
 import phoneIcon from '../images/icon_phone.png';
 import backgroundImage from '../images/background.png';
 import playerImage from '../images/player.png';
-import { chapterUtils, loadChapterProgress } from '../data/monologues';
-import { getDialogue } from '../services/api';
+import { chapterUtils, loadChapterProgress } from '../data/gameFlow';
 import ChatList from './chat/ChatList';
 import ChatRoom from './chat/ChatRoom';
 import { STORAGE_KEYS, storageUtils } from '../utils/storage';
@@ -21,6 +21,9 @@ export default function GameContainer() {
   const [hasLocalData, setHasLocalData] = useState({});
   const [availableChats, setAvailableChats] = useState([]);
   const [isDelayActive, setIsDelayActive] = useState(false);
+
+  const [characters, setCharacters] = useState([]);
+  const [chats, setChats] = useState([]);
 
   const handlePhoneClick = () => {
     setIsChatOpen(!isChatOpen);
@@ -729,6 +732,40 @@ export default function GameContainer() {
 
     return savedMessages;
   };
+
+  useEffect(() => {
+    const fetchCharacters = async () => {
+      try {
+        // 먼저 로컬 스토리지에서 캐릭터 데이터 확인
+        const savedCharacters = storageUtils.get(STORAGE_KEYS.CHARACTERS, []);
+
+        if (savedCharacters.length > 0) {
+          setCharacters(savedCharacters);
+          console.log('로컬 저장된 캐릭터 데이터 사용:', savedCharacters);
+          return;
+        }
+
+        // 로컬 스토리지에 데이터가 없으면 API에서 가져오기
+        const charactersData = await getCharacters();
+        setCharacters(charactersData);
+
+        // API 데이터를 로컬 스토리지에 저장
+        storageUtils.set(STORAGE_KEYS.CHARACTERS, charactersData);
+
+        console.log('받은 캐릭터 데이터:', charactersData);
+      } catch (error) {
+        console.error('캐릭터 데이터 로딩 실패:', error);
+      }
+    };
+
+    fetchCharacters();
+  }, []);
+
+  useEffect(() => {
+    const temp = storageUtils.get('escape_game_chat_friend');
+    console.log('temp:', temp);
+    setChats();
+  }, []);
 
   return (
     <GameContainerWrapper
