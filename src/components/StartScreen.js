@@ -1,10 +1,26 @@
 import React from 'react';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
+import { getCharacters } from '../services/api';
+import FlowManager from './managers/FlowManager';
 
-export default function StartScreen({ onStartGame }) {
+export default function StartScreen() {
+  const navigate = useNavigate();
+
+  const flowManager = FlowManager();
+  const { setCurrFlow, setCharacters } = flowManager;
+
+  const handleStartGame = async () => {
+    setCurrFlow({ id: 'opening', index: 0 });
+    navigate('/game');
+
+    const charactersData = await getCharacters();
+    setCharacters(charactersData);
+  };
+
   return (
     <Container>
-      <StartButton onClick={onStartGame}>방에서 나가기</StartButton>
+      <StartButton onClick={handleStartGame}>방에서 나가기</StartButton>
     </Container>
   );
 }

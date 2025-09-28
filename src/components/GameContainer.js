@@ -1,16 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
-import { getCharacters, getDialogue } from '../services/api';
-import phoneIcon from '../images/icon_phone.png';
+import { getDialogue } from '../services/api';
 import backgroundImage from '../images/background.png';
-import playerImage from '../images/player.png';
 import { chapterUtils, loadChapterProgress } from '../data/gameFlow';
 import ChatList from './chat/ChatList';
 import ChatRoom from './chat/ChatRoom';
 import { STORAGE_KEYS, storageUtils } from '../utils/storage';
+import FlowManager from './managers/FlowManager';
+import Monologue from './Monologue';
+import BottomArea from './BottomArea';
 import '../utils/debug'; // 개발자 디버그 기능 로드
 
 export default function GameContainer() {
+  const flowManager = FlowManager();
+  const { currStep, moveNextStep } = flowManager;
+
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [selectedChat, setSelectedChat] = useState(null);
   const [isMonologueOpen, setIsMonologueOpen] = useState(false);
@@ -22,14 +26,16 @@ export default function GameContainer() {
   const [availableChats, setAvailableChats] = useState([]);
   const [isDelayActive, setIsDelayActive] = useState(false);
 
-  const [characters, setCharacters] = useState([]);
-  const [chats, setChats] = useState([]);
-
   const handlePhoneClick = () => {
     setIsChatOpen(!isChatOpen);
     if (isChatOpen) {
       setSelectedChat(null);
     }
+  };
+
+  const handleMonologueEnd = () => {
+    setIsMonologueOpen(false);
+    moveNextStep();
   };
 
   const handleChatSelect = async chatId => {
@@ -38,9 +44,9 @@ export default function GameContainer() {
     // 현재 스텝이 chatFromOpponent인 경우 해당 채팅방에 들어갔을 때 처리
     if (
       currentChapter &&
-      currentChapter.step[currentStepIndex]?.type === 'chatFromOpponent'
+      currentChapter.stepss[currentStepIndex]?.type === 'chatFromOpponent'
     ) {
-      const currentStep = currentChapter.step[currentStepIndex];
+      const currentStep = currentChapter.stepss[currentStepIndex];
       if (currentStep.data.key === chatId) {
         // 4. 플레이어가 해당 채팅방에 입장했다면, 불러왔던 메시지를 로컬스토리지에 저장
         // eslint-disable-next-line no-console
@@ -101,8 +107,8 @@ export default function GameContainer() {
     // 이 로직은 handleMessageRead에서 처리하므로 제거
     // if (
     //   currentChapter &&
-    //   currentChapter.step[currentStepIndex]?.type === 'chatFromOpponent' &&
-    //   currentChapter.step[currentStepIndex].data.key === chatId &&
+    //   currentChapter.steps[currentStepIndex]?.type === 'chatFromOpponent' &&
+    //   currentChapter.steps[currentStepIndex].data.key === chatId &&
     //   hasUnreadMessages
     // ) {
     //   // 메시지를 읽었으므로 다음 스텝으로 진행
@@ -158,11 +164,11 @@ export default function GameContainer() {
       return;
     }
 
-    if (!currentChapter || currentStepIndex >= currentChapter.step.length) {
+    if (!currentChapter || currentStepIndex >= currentChapter.steps.length) {
       return;
     }
 
-    const currentStep = currentChapter.step[currentStepIndex];
+    const currentStep = currentChapter.steps[currentStepIndex];
 
     // 독백이 아닌 경우에만 화면 클릭 처리
     if (currentStep.type !== 'monologue') {
@@ -175,7 +181,7 @@ export default function GameContainer() {
       }
     } else if (currentStep.type === 'monologue' && !isMonologueOpen) {
       // 독백이 아직 시작되지 않은 경우에만 처리
-      handleMonologueClick();
+      // handleMonologueClick();
     }
   };
 
@@ -187,34 +193,6 @@ export default function GameContainer() {
       callback();
     }, 1000);
   }, []);
-
-  // 독백 상자 클릭 처리
-  const handleMonologueClick = () => {
-    if (!currentChapter || currentStepIndex >= currentChapter.step.length) {
-      return;
-    }
-
-    const currentStep = currentChapter.step[currentStepIndex];
-
-    if (currentStep.type === 'monologue') {
-      if (isMonologueOpen) {
-        // 현재 독백 그룹 내에서 더 표시할 텍스트가 있는지 확인
-        if (currentTextIndex < currentStep.data.length - 1) {
-          // 같은 그룹 내에서 다음 텍스트로
-          setCurrentTextIndex(currentTextIndex + 1);
-        } else {
-          // 현재 독백 그룹이 끝났으므로 다음 스텝으로
-          goToNextStep();
-        }
-      } else {
-        // 독백 시작 (1초 딜레이)
-        startDelay(() => {
-          setIsMonologueOpen(true);
-          setCurrentTextIndex(0);
-        });
-      }
-    }
-  };
 
   // 스텝 진행상황 저장
   const saveStepProgress = useCallback(() => {
@@ -230,7 +208,7 @@ export default function GameContainer() {
   // 캐릭터 이름 매핑
   const getCharacterName = useCallback(chatId => {
     const nameMap = {
-      friend: '👭 친구 (민아)',
+      friend: '👭 친구 (수정)',
       sister: '👧 여동생 (과거의 나)',
       mother: '👩 엄마',
       colleague: '🧑‍💻 회사 후배',
@@ -313,9 +291,9 @@ export default function GameContainer() {
     // 현재 스텝 진행상황 저장
     saveStepProgress();
 
-    if (currentStepIndex < currentChapter.step.length - 1) {
+    if (currentStepIndex < currentChapter.steps.length - 1) {
       const nextStepIndex = currentStepIndex + 1;
-      const nextStep = currentChapter.step[nextStepIndex];
+      const nextStep = currentChapter.steps[nextStepIndex];
 
       setCurrentStepIndex(nextStepIndex);
       setCurrentTextIndex(0);
@@ -344,7 +322,7 @@ export default function GameContainer() {
         setIsMonologueOpen(false);
 
         // 다음 챕터의 첫 스텝 타입에 따른 처리
-        const firstStep = nextChapter.step[0];
+        const firstStep = nextChapter.steps[0];
         if (firstStep?.type === 'monologue') {
           // 독백인 경우 1초 딜레이 후 자동으로 시작
           startDelay(() => {
@@ -486,7 +464,7 @@ export default function GameContainer() {
   const handleMessageRead = useCallback(
     chatId => {
       // 현재 스텝이 chatFromOpponent 또는 chatFromMe이고 해당 채팅방인 경우, 메시지를 읽었을 때만 다음 스텝으로 진행
-      const currentStep = currentChapter?.step[currentStepIndex];
+      const currentStep = currentChapter?.steps[currentStepIndex];
       const isChatFromOpponent = currentStep?.type === 'chatFromOpponent';
       const isChatFromMe = currentStep?.type === 'chatFromMe';
 
@@ -542,112 +520,6 @@ export default function GameContainer() {
     [currentChapter, currentStepIndex, goToNextStep]
   );
 
-  const startMonologue = () => {
-    if (
-      currentChapter &&
-      currentChapter.step[currentStepIndex]?.type === 'monologue'
-    ) {
-      // 1초 딜레이 후 독백 시작
-      startDelay(() => {
-        setIsMonologueOpen(true);
-        setCurrentTextIndex(0);
-      });
-    }
-  };
-
-  // 로컬 스토리지 데이터 삭제 함수
-  const clearLocalStorageData = () => {
-    try {
-      // 1. 접두어로 시작하는 모든 게임 데이터 삭제
-      const success = storageUtils.clearAll();
-
-      if (!success) {
-        // eslint-disable-next-line no-console
-        console.warn('일반 삭제 실패, 강제 삭제 시도');
-        // 2. 강제 삭제: 모든 가능한 키들을 직접 삭제
-        const allKeys = [
-          'escape_game_characters',
-          'escape_game_chapter_progress',
-          'escape_game_message_progress',
-          'escape_game_step_progress',
-        ];
-
-        // 각 채팅방 데이터도 삭제
-        const chatIds = [
-          'friend',
-          'sister',
-          'mother',
-          'colleague',
-          'future_self',
-        ];
-        chatIds.forEach(chatId => {
-          allKeys.push(`escape_game_chat_${chatId}`);
-          allKeys.push(`escape_game_unread_${chatId}`);
-        });
-
-        allKeys.forEach(key => {
-          try {
-            localStorage.removeItem(key);
-          } catch (error) {
-            // eslint-disable-next-line no-console
-            console.error(`강제 삭제 실패: ${key}`, error);
-          }
-        });
-      }
-
-      // 3. 최종 검증
-      const remainingGameKeys = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('escape_game_')) {
-          remainingGameKeys.push(key);
-        }
-      }
-
-      if (remainingGameKeys.length > 0) {
-        // eslint-disable-next-line no-console
-        console.warn('리셋 후 남은 게임 데이터:', remainingGameKeys);
-      } else {
-        // eslint-disable-next-line no-console
-        console.log('게임 데이터 완전 삭제 완료');
-      }
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('로컬 스토리지 삭제 중 오류:', error);
-    }
-  };
-
-  const handleResetGame = () => {
-    const confirmed = window.confirm(
-      '게임 데이터가 초기화됩니다. 초기화 하시겠습니까?'
-    );
-
-    if (confirmed) {
-      // 1. 먼저 로컬 스토리지 데이터 완전 삭제
-      clearLocalStorageData();
-
-      // 2. 잠시 대기 후 상태 초기화 (로컬스토리지 삭제 완료 보장)
-      setTimeout(() => {
-        // 게임 데이터 초기화
-        chapterUtils.resetProgress();
-
-        // 모든 상태 초기화
-        setCurrentChapter(chapterUtils.getCurrentChapter());
-        setCurrentStepIndex(0);
-        setCurrentTextIndex(0);
-        setIsMonologueOpen(false);
-        setIsChatOpen(false);
-        setSelectedChat(null);
-        setAvailableChats([]);
-        setDialogueData({});
-        setHasLocalData({});
-
-        // 페이지 새로고침으로 완전한 초기화 보장
-        window.location.reload();
-      }, 100);
-    }
-  };
-
   useEffect(() => {
     loadChapterProgress();
     const chapter = chapterUtils.getCurrentChapter();
@@ -676,7 +548,7 @@ export default function GameContainer() {
 
       if (messages.length > 0) {
         const nameMap = {
-          friend: '👭 친구 (민아)',
+          friend: '👭 친구 (수정)',
           sister: '👧 여동생',
           mother: '👩 엄마',
           colleague: '🧑‍💻 회사 후배',
@@ -698,7 +570,7 @@ export default function GameContainer() {
     setAvailableChats(existingChats);
 
     // 첫 스텝 타입에 따른 처리
-    const currentStep = chapter?.step[0];
+    const currentStep = chapter?.steps[0];
     if (currentStep?.type === 'monologue') {
       // 독백인 경우 1초 딜레이 후 자동으로 시작
       startDelay(() => {
@@ -733,55 +605,12 @@ export default function GameContainer() {
     return savedMessages;
   };
 
-  useEffect(() => {
-    const fetchCharacters = async () => {
-      try {
-        // 먼저 로컬 스토리지에서 캐릭터 데이터 확인
-        const savedCharacters = storageUtils.get(STORAGE_KEYS.CHARACTERS, []);
-
-        if (savedCharacters.length > 0) {
-          setCharacters(savedCharacters);
-          console.log('로컬 저장된 캐릭터 데이터 사용:', savedCharacters);
-          return;
-        }
-
-        // 로컬 스토리지에 데이터가 없으면 API에서 가져오기
-        const charactersData = await getCharacters();
-        setCharacters(charactersData);
-
-        // API 데이터를 로컬 스토리지에 저장
-        storageUtils.set(STORAGE_KEYS.CHARACTERS, charactersData);
-
-        console.log('받은 캐릭터 데이터:', charactersData);
-      } catch (error) {
-        console.error('캐릭터 데이터 로딩 실패:', error);
-      }
-    };
-
-    fetchCharacters();
-  }, []);
-
-  useEffect(() => {
-    const temp = storageUtils.get('escape_game_chat_friend');
-    console.log('temp:', temp);
-    setChats();
-  }, []);
-
   return (
     <GameContainerWrapper
       onClick={handleScreenClick}
       backgroundImage={backgroundImage}
     >
-      <BottomFixedArea>
-        <PhoneIcon
-          src={phoneIcon}
-          alt="Phone Icon"
-          onClick={handlePhoneClick}
-        />
-        <MonologueButton onClick={startMonologue}>💭</MonologueButton>
-        <ResetButton onClick={handleResetGame}>🔄</ResetButton>
-      </BottomFixedArea>
-
+      <BottomArea onChatOpenClick={handlePhoneClick} />
       {isChatOpen &&
         (selectedChat ? (
           <ChatRoom
@@ -802,58 +631,21 @@ export default function GameContainer() {
             onChatSelect={handleChatSelect}
           />
         ))}
-
-      {/* 딜레이 중일 때 dim 처리 */}
-      {isDelayActive && (
-        <DelayOverlay>
-          <DelayText>잠시만요...</DelayText>
-        </DelayOverlay>
-      )}
-
       {/* 현재 스텝이 chatFromOpponent인 경우 안내 메시지 */}
       {currentChapter &&
-        currentChapter.step[currentStepIndex]?.type === 'chatFromOpponent' && (
+        currentChapter.steps[currentStepIndex]?.type === 'chatFromOpponent' && (
           <PendingChatOverlay>
             <PendingChatMessage>
-              {getCharacterName(currentChapter.step[currentStepIndex].data.key)}
+              {getCharacterName(
+                currentChapter.steps[currentStepIndex].data.key
+              )}
               의 메시지를 확인해주세요
             </PendingChatMessage>
           </PendingChatOverlay>
         )}
-
-      {isMonologueOpen &&
-        currentChapter &&
-        currentChapter.step[currentStepIndex]?.type === 'monologue' &&
-        currentTextIndex >= 0 && (
-          <MonologueOverlay>
-            <MonologueBox onClick={handleMonologueClick}>
-              <MonologueContent>
-                <PlayerImage src={playerImage} alt="Player" />
-                <MonologueText>
-                  {currentChapter.step[currentStepIndex].data?.map(
-                    (text, index) => (
-                      <div
-                        key={index}
-                        style={{
-                          marginBottom: '10px',
-                          opacity: index <= currentTextIndex ? 1 : 0,
-                          transition: 'opacity 0.3s ease-in-out',
-                          visibility:
-                            index <= currentTextIndex ? 'visible' : 'hidden',
-                        }}
-                      >
-                        {text}
-                      </div>
-                    )
-                  )}
-                </MonologueText>
-              </MonologueContent>
-              <MonologueProgress>
-                {currentStepIndex + 1} / {currentChapter.step.length}
-              </MonologueProgress>
-            </MonologueBox>
-          </MonologueOverlay>
-        )}
+      {currStep.type === 'monologue' && (
+        <Monologue texts={currStep.data} onEnd={handleMonologueEnd} />
+      )}
     </GameContainerWrapper>
   );
 }
@@ -868,146 +660,6 @@ const GameContainerWrapper = styled.div`
   display: flex;
   flex-direction: column;
   position: relative;
-`;
-
-const BottomFixedArea = styled.div`
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 80px;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-top: 1px solid #333;
-`;
-
-const PhoneIcon = styled.img`
-  width: 40px;
-  cursor: pointer;
-  transition: opacity 0.3s;
-
-  &:hover {
-    opacity: 0.8;
-  }
-`;
-
-const MonologueButton = styled.button`
-  width: 40px;
-  height: 40px;
-  background: #28a745;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 20px;
-  margin-left: 10px;
-  transition: opacity 0.3s;
-
-  &:hover {
-    opacity: 0.8;
-  }
-`;
-
-const ResetButton = styled.button`
-  width: 40px;
-  height: 40px;
-  background: #dc3545;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 20px;
-  margin-left: 10px;
-  transition: opacity 0.3s;
-
-  &:hover {
-    opacity: 0.8;
-  }
-`;
-
-const MonologueOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 100px;
-  z-index: 2000;
-`;
-
-const MonologueBox = styled.div`
-  background: #1a1a1a;
-  border: 2px solid #333;
-  border-radius: 15px;
-  padding: 30px;
-  width: 80%;
-  max-width: 600px;
-  min-height: 200px;
-  text-align: center;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-`;
-
-const MonologueContent = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin-bottom: 20px;
-`;
-
-const PlayerImage = styled.img`
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-`;
-
-const MonologueText = styled.div`
-  color: white;
-  font-size: 18px;
-  line-height: 1.6;
-  font-weight: 500;
-  flex: 1;
-  text-align: left;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-`;
-
-const MonologueProgress = styled.div`
-  color: #888;
-  font-size: 14px;
-`;
-
-const DelayOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1500;
-  pointer-events: all;
-`;
-
-const DelayText = styled.div`
-  color: white;
-  font-size: 18px;
-  font-weight: 500;
-  text-align: center;
-  background: rgba(0, 0, 0, 0.7);
-  padding: 20px 40px;
-  border-radius: 10px;
-  border: 1px solid #333;
 `;
 
 const PendingChatOverlay = styled.div`
