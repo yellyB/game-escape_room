@@ -51,14 +51,6 @@ export default function BottomArea({ onChatOpenClick }) {
           remainingGameKeys.push(key);
         }
       }
-
-      if (remainingGameKeys.length > 0) {
-        // eslint-disable-next-line no-console
-        console.warn('리셋 후 남은 게임 데이터:', remainingGameKeys);
-      } else {
-        // eslint-disable-next-line no-console
-        console.log('게임 데이터 완전 삭제 완료');
-      }
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('로컬 스토리지 삭제 중 오류:', error);

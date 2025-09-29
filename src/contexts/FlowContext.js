@@ -43,7 +43,8 @@ const FlowContext = createContext();
 export function FlowProvider({ children }) {
   const [currStepKey, setCurrStepKey] = useState(INITIAL_STEP_KEY);
   const [characters, setCharacters] = useState(INITIAL_CHARACTERS);
-  const [chats, setChats] = useState([]);
+  const [readChats, setReadChats] = useState([]);
+  const [unReadChats, setUnReadChats] = useState([]);
 
   const currStepData = useMemo(() => {
     return chapters[currStepKey.id][currStepKey.index];
@@ -53,22 +54,107 @@ export function FlowProvider({ children }) {
     return characters.filter(character => character.isChatAvailable);
   };
 
-  const getChatMessagesByOpponentId = opponentId => {
-    return chats.find(chat => chat.key === opponentId)?.messages || [];
+  const getReadChatMessagesByOpponentId = opponentId => {
+    return readChats.find(chat => chat.key === opponentId)?.messages || [];
   };
 
+  const getUnReadChatMessagesByOpponentId = useCallback(
+    opponentId => {
+      const chat = readChats.find(chat => chat.key === opponentId);
+      if (!chat) return [];
+
+      return chat.messages.filter(message => message.isRead === false);
+    },
+    [readChats]
+  );
+
   const turnToChatAvailable = useCallback(id => {
-    console.log('turnToChatAvailable 호출됨, id:', id);
     setCharacters(prevCharacters => {
       const updated = prevCharacters.map(character => {
         return character.id === id
           ? { ...character, isChatAvailable: true }
           : character;
       });
-      console.log('업데이트된 캐릭터들:', updated);
       return updated;
     });
   }, []);
+
+  const setUnReadToRead = useCallback((opponentId, messageData) => {
+    setReadChats(prevChats => {
+      // 해당 opponentId의 채팅방 찾기
+      const existingChatIndex = prevChats.findIndex(
+        chat => chat.key === opponentId
+      );
+
+      if (existingChatIndex === -1) {
+        // 채팅방이 없으면 새로 생성
+        return [
+          ...prevChats,
+          {
+            key: opponentId,
+            messages: [messageData],
+          },
+        ];
+      } else {
+        // 채팅방이 있으면 메시지 확인 후 추가
+        const existingChat = prevChats[existingChatIndex];
+        const messageExists = existingChat.messages.some(
+          msg => msg.id === messageData.id
+        );
+
+        if (!messageExists) {
+          // 메시지가 없으면 추가
+          const updatedChats = [...prevChats];
+          updatedChats[existingChatIndex] = {
+            ...updatedChats[existingChatIndex],
+            messages: [
+              ...updatedChats[existingChatIndex].messages,
+              messageData,
+            ],
+          };
+          return updatedChats;
+        }
+
+        // 메시지가 이미 있으면 기존 데이터 반환
+        return prevChats;
+      }
+    });
+  }, []);
+
+  const markMessagesAsRead = useCallback((opponentId, messageId) => {
+    setReadChats(prevChats => {
+      return prevChats.map(chat => {
+        if (chat.key === opponentId) {
+          return {
+            ...chat,
+            messages: chat.messages.map(message => {
+              if (message.id === messageId) {
+                return { ...message, isRead: true };
+              }
+              return message;
+            }),
+          };
+        }
+        return chat;
+      });
+    });
+  }, []);
+
+  const turnToMessagesAsRead = opponentId => {
+    setReadChats(prevChats => {
+      return prevChats.map(chat => {
+        if (chat.key === opponentId) {
+          return {
+            ...chat,
+            messages: chat.messages.map(message => {
+              return { ...message, isRead: true };
+            }),
+          };
+        }
+        return chat;
+      });
+    });
+  };
 
   const startMonologue = () => {
     console.log('=============1:', characters);
@@ -83,12 +169,8 @@ export function FlowProvider({ children }) {
       characterId: opponentId,
       partNumber,
     });
-    console.log('1111111111 dialogue:', dialogue);
 
-    const temp = { key: opponentId, messages: dialogue.messages };
-    console.log('1111111111 temp:', temp);
-
-    setChats(prevChats => {
+    setReadChats(prevChats => {
       const existingChatIndex = prevChats.findIndex(
         chat => chat.key === opponentId
       );
@@ -129,7 +211,6 @@ export function FlowProvider({ children }) {
 
     const nextStepData =
       chapters[currStepData.next.id][currStepData.next.index];
-    console.log(currStepData, nextStepData);
 
     switch (nextStepData.type) {
       case 'monologue':
@@ -147,21 +228,27 @@ export function FlowProvider({ children }) {
   };
 
   useEffect(() => {
-    console.log('----:', currStepData);
+    // console.log('----:', currStepData);
     // 테스트: friend를 채팅 가능하게 설정
-    turnToChatAvailable('friend');
+    // turnToChatAvailable('friend');
   }, [currStepData, turnToChatAvailable]);
 
   const value = {
     characters,
     currStepKey,
     currStepData,
+    unReadChats,
+    readChats,
     setCurrStepKey,
     setCharacters,
     moveNextStep,
     turnToChatAvailable,
     getChatAvailableCharacters,
-    getChatMessagesByOpponentId,
+    getReadChatMessagesByOpponentId,
+    getUnReadChatMessagesByOpponentId,
+    markMessagesAsRead,
+    setUnReadToRead,
+    turnToMessagesAsRead,
   };
 
   return <FlowContext.Provider value={value}>{children}</FlowContext.Provider>;
