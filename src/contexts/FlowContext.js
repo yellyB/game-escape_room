@@ -245,7 +245,6 @@ export function FlowProvider({ children }) {
     turnToChatAvailable,
     getChatAvailableCharacters,
     getReadChatMessagesByOpponentId,
-    getUnReadChatMessagesByOpponentId,
     markMessagesAsRead,
     setUnReadToRead,
     turnToMessagesAsRead,

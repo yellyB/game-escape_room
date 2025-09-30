@@ -1,13 +1,29 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import styled from 'styled-components';
 import colors from '../../styles/colors';
 import ChatHeader from './ChatHeader';
 import { useFlowManager } from '../../contexts/FlowContext';
 
 export default function ChatList({ onChatSelect }) {
-  const { getChatAvailableCharacters, moveNextStep } = useFlowManager();
+  const {
+    getChatAvailableCharacters,
+    getReadChatMessagesByOpponentId,
+    moveNextStep,
+    readChats,
+  } = useFlowManager();
 
   const chatAvailableCharacters = getChatAvailableCharacters();
+
+  const getUnreadCount = useMemo(() => {
+    const unreadCounts = {};
+    readChats.forEach(chat => {
+      const unreadCount = chat.messages.filter(
+        message => message.isRead === false
+      ).length;
+      unreadCounts[chat.key] = unreadCount;
+    });
+    return unreadCounts;
+  }, [readChats]);
 
   return (
     <ChatListContainer>
@@ -15,25 +31,37 @@ export default function ChatList({ onChatSelect }) {
       <ChatContent>
         <ChatRoomList>
           <div style={{ color: 'white' }} onClick={() => moveNextStep()}>
-            test
+            moveNextStep
           </div>
-          {chatAvailableCharacters.map(room => (
-            <ChatRoomItem
-              key={room.id}
-              onClick={() => onChatSelect(room.id)}
-              hasUnread={room.unread > 0}
-            >
-              <RoomAvatar>👤</RoomAvatar>
-              <RoomInfo>
-                <RoomName>{room.name}</RoomName>
-                <LastMessage>{room.lastMessage}</LastMessage>
-              </RoomInfo>
-              <RoomMeta>
-                <RoomTime>{room.time}</RoomTime>
-                {room.unread > 0 && <UnreadIndicator>●</UnreadIndicator>}
-              </RoomMeta>
-            </ChatRoomItem>
-          ))}
+          <div style={{ color: 'white' }}>readChats</div>
+          {chatAvailableCharacters.map(room => {
+            const unreadCount = getUnreadCount[room.id] || 0;
+            const lastMessage = getReadChatMessagesByOpponentId(room.id)?.at(
+              -1
+            );
+
+            return (
+              <ChatRoomItem
+                key={room.id}
+                onClick={() => onChatSelect(room.id)}
+                hasUnread={!!unreadCount}
+              >
+                <RoomAvatar>👤</RoomAvatar>
+                <RoomInfo>
+                  <RoomName>{room.name}</RoomName>
+                  <LastMessage>
+                    {!!unreadCount
+                      ? '새로운 메시지가 있습니다'
+                      : lastMessage?.message}
+                  </LastMessage>
+                </RoomInfo>
+                <RoomMeta>
+                  <RoomTime>{room.time}</RoomTime>
+                  {!!unreadCount && <UnreadBadge>{unreadCount}</UnreadBadge>}
+                </RoomMeta>
+              </ChatRoomItem>
+            );
+          })}
         </ChatRoomList>
       </ChatContent>
     </ChatListContainer>
@@ -67,13 +95,20 @@ const ChatRoomItem = styled.div`
     props.hasUnread ? colors.primarySecondary : colors.darkGray};
   border: ${props =>
     props.hasUnread ? 'none' : `1px solid ${colors.primarySecondary}`};
-  padding: 10px 24px;
+  padding: 12px 24px;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   gap: 18px;
-  min-height: 60px;
+  min-height: 70px;
+  border-left: ${props =>
+    props.hasUnread ? `4px solid ${colors.primary}` : 'none'};
+
+  &:hover {
+    background: ${props =>
+      props.hasUnread ? colors.primarySecondary : colors.lightGraySecondary};
+  }
 `;
 
 const RoomAvatar = styled.div`
@@ -121,11 +156,30 @@ const RoomTime = styled.div`
   font-size: 12px;
 `;
 
-const UnreadIndicator = styled.div`
-  color: ${colors.primary};
+const UnreadBadge = styled.div`
+  background: ${colors.primary};
+  color: ${colors.white};
+  border-radius: 12px;
+  padding: 4px 8px;
   font-size: 12px;
   font-weight: bold;
+  min-width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  animation: pulse 2s infinite;
+
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
 `;
