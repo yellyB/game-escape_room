@@ -15,26 +15,31 @@ const INITIAL_CHARACTERS = [
     id: 'friend',
     name: '수정',
     isChatAvailable: false,
+    lastChatDate: null, // NOTE: 현재 저장되는 값은 대화가 시작한 시간이다. 추후 개선 필요 시 작업예정
   },
   {
     id: 'mother',
     name: '엄마',
     isChatAvailable: false,
+    lastChatDate: null,
   },
   {
     id: 'colleague',
     name: '민영씨',
     isChatAvailable: false,
+    lastChatDate: null,
   },
   {
     id: 'sister',
     name: '여동생',
     isChatAvailable: false,
+    lastChatDate: null,
   },
   {
     id: 'future_self',
     name: '미래의 나',
     isChatAvailable: false,
+    lastChatDate: null,
   },
 ];
 
@@ -104,7 +109,6 @@ export function FlowProvider({ children }) {
   };
 
   const updateChatData = (key, message) => {
-    console.log(message);
     setChatData(prevChats => {
       const existingChatIndex = prevChats.findIndex(chat => chat.key === key);
 
@@ -134,6 +138,14 @@ export function FlowProvider({ children }) {
         // 메시지가 이미 있으면 기존 데이터 반환
         return prevChats;
       }
+    });
+    setCharacters(prevCharacters => {
+      return prevCharacters.map(character => {
+        if (character.id === key) {
+          return { ...character, lastChatDate: new Date() };
+        }
+        return character;
+      });
     });
   };
 

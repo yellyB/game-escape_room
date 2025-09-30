@@ -12,7 +12,15 @@ export default function ChatList({ onChatSelect }) {
     chatData,
   } = useFlowManager();
 
-  const chatAvailableCharacters = getChatAvailableCharacters();
+  const sortedChatAvailableCharacters = getChatAvailableCharacters().sort(
+    (a, b) => {
+      if (!a.lastChatDate && !b.lastChatDate) return 0;
+      if (!a.lastChatDate) return 1;
+      if (!b.lastChatDate) return -1;
+
+      return new Date(b.lastChatDate) - new Date(a.lastChatDate);
+    }
+  );
 
   const getUnreadCount = useMemo(() => {
     const unreadCounts = {};
@@ -34,7 +42,7 @@ export default function ChatList({ onChatSelect }) {
             moveNextStep
           </div>
           <div style={{ color: 'white' }}>chatData</div>
-          {chatAvailableCharacters.map(room => {
+          {sortedChatAvailableCharacters.map(room => {
             const unreadCount = getUnreadCount[room.id] || 0;
             const lastMessage = getChatsByOpponentId(room.id)?.at(-1);
 

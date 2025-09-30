@@ -129,7 +129,6 @@ export default function ChatRoom({ opponentId, onBack }) {
       moveNextStep();
       return;
     } else {
-      console.log('isOpponentTyping', visibleCount, delayedItems.length);
       setIsOpponentTyping(true);
     }
 
