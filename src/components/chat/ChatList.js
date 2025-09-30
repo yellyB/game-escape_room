@@ -7,23 +7,23 @@ import { useFlowManager } from '../../contexts/FlowContext';
 export default function ChatList({ onChatSelect }) {
   const {
     getChatAvailableCharacters,
-    getReadChatMessagesByOpponentId,
+    getChatsByOpponentId,
     moveNextStep,
-    readChats,
+    chatData,
   } = useFlowManager();
 
   const chatAvailableCharacters = getChatAvailableCharacters();
 
   const getUnreadCount = useMemo(() => {
     const unreadCounts = {};
-    readChats.forEach(chat => {
+    chatData.forEach(chat => {
       const unreadCount = chat.messages.filter(
         message => message.isRead === false
       ).length;
       unreadCounts[chat.key] = unreadCount;
     });
     return unreadCounts;
-  }, [readChats]);
+  }, [chatData]);
 
   return (
     <ChatListContainer>
@@ -33,12 +33,10 @@ export default function ChatList({ onChatSelect }) {
           <div style={{ color: 'white' }} onClick={() => moveNextStep()}>
             moveNextStep
           </div>
-          <div style={{ color: 'white' }}>readChats</div>
+          <div style={{ color: 'white' }}>chatData</div>
           {chatAvailableCharacters.map(room => {
             const unreadCount = getUnreadCount[room.id] || 0;
-            const lastMessage = getReadChatMessagesByOpponentId(room.id)?.at(
-              -1
-            );
+            const lastMessage = getChatsByOpponentId(room.id)?.at(-1);
 
             return (
               <ChatRoomItem

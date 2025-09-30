@@ -43,8 +43,7 @@ const FlowContext = createContext();
 export function FlowProvider({ children }) {
   const [currStepKey, setCurrStepKey] = useState(INITIAL_STEP_KEY);
   const [characters, setCharacters] = useState(INITIAL_CHARACTERS);
-  const [readChats, setReadChats] = useState([]);
-  const [unReadChats, setUnReadChats] = useState([]);
+  const [chatData, setChatData] = useState([]);
 
   const currStepData = useMemo(() => {
     return chapters[currStepKey.id][currStepKey.index];
@@ -54,19 +53,9 @@ export function FlowProvider({ children }) {
     return characters.filter(character => character.isChatAvailable);
   };
 
-  const getReadChatMessagesByOpponentId = opponentId => {
-    return readChats.find(chat => chat.key === opponentId)?.messages || [];
+  const getChatsByOpponentId = opponentId => {
+    return chatData.find(chat => chat.key === opponentId)?.messages || [];
   };
-
-  const getUnReadChatMessagesByOpponentId = useCallback(
-    opponentId => {
-      const chat = readChats.find(chat => chat.key === opponentId);
-      if (!chat) return [];
-
-      return chat.messages.filter(message => message.isRead === false);
-    },
-    [readChats]
-  );
 
   const turnToChatAvailable = useCallback(id => {
     setCharacters(prevCharacters => {
@@ -79,50 +68,8 @@ export function FlowProvider({ children }) {
     });
   }, []);
 
-  const setUnReadToRead = useCallback((opponentId, messageData) => {
-    setReadChats(prevChats => {
-      // 해당 opponentId의 채팅방 찾기
-      const existingChatIndex = prevChats.findIndex(
-        chat => chat.key === opponentId
-      );
-
-      if (existingChatIndex === -1) {
-        // 채팅방이 없으면 새로 생성
-        return [
-          ...prevChats,
-          {
-            key: opponentId,
-            messages: [messageData],
-          },
-        ];
-      } else {
-        // 채팅방이 있으면 메시지 확인 후 추가
-        const existingChat = prevChats[existingChatIndex];
-        const messageExists = existingChat.messages.some(
-          msg => msg.id === messageData.id
-        );
-
-        if (!messageExists) {
-          // 메시지가 없으면 추가
-          const updatedChats = [...prevChats];
-          updatedChats[existingChatIndex] = {
-            ...updatedChats[existingChatIndex],
-            messages: [
-              ...updatedChats[existingChatIndex].messages,
-              messageData,
-            ],
-          };
-          return updatedChats;
-        }
-
-        // 메시지가 이미 있으면 기존 데이터 반환
-        return prevChats;
-      }
-    });
-  }, []);
-
   const markMessagesAsRead = useCallback((opponentId, messageId) => {
-    setReadChats(prevChats => {
+    setChatData(prevChats => {
       return prevChats.map(chat => {
         if (chat.key === opponentId) {
           return {
@@ -140,8 +87,8 @@ export function FlowProvider({ children }) {
     });
   }, []);
 
-  const turnToMessagesAsRead = opponentId => {
-    setReadChats(prevChats => {
+  const turnAllMessagesAsRead = opponentId => {
+    setChatData(prevChats => {
       return prevChats.map(chat => {
         if (chat.key === opponentId) {
           return {
@@ -156,6 +103,40 @@ export function FlowProvider({ children }) {
     });
   };
 
+  const updateChatData = (key, message) => {
+    console.log(message);
+    setChatData(prevChats => {
+      const existingChatIndex = prevChats.findIndex(chat => chat.key === key);
+
+      if (existingChatIndex === -1) {
+        return [
+          ...prevChats,
+          {
+            key: key,
+            messages: [message],
+          },
+        ];
+      } else {
+        const existingChat = prevChats[existingChatIndex];
+        const messageExists = existingChat.messages.some(
+          msg => msg.id === message.id
+        );
+
+        if (!messageExists) {
+          const updatedChats = [...prevChats];
+          updatedChats[existingChatIndex] = {
+            ...updatedChats[existingChatIndex],
+            messages: [...updatedChats[existingChatIndex].messages, message],
+          };
+          return updatedChats;
+        }
+
+        // 메시지가 이미 있으면 기존 데이터 반환
+        return prevChats;
+      }
+    });
+  };
+
   const startMonologue = () => {
     console.log('=============1:', characters);
   };
@@ -163,42 +144,24 @@ export function FlowProvider({ children }) {
   const startChatFromOpponent = async data => {
     const { key: opponentId, partNumber } = data;
     console.log('=============2:', opponentId);
-    turnToChatAvailable(opponentId);
+    if (!opponentId) return;
+
+    const opponent = characters.find(char => char.id === opponentId);
+    if (!opponent.isChatAvailable) {
+      turnToChatAvailable(opponentId);
+    }
 
     const dialogue = await getDialogue({
       characterId: opponentId,
       partNumber,
     });
 
-    setReadChats(prevChats => {
-      const existingChatIndex = prevChats.findIndex(
-        chat => chat.key === opponentId
-      );
-
-      const newMessages = dialogue.messages.map(message => ({
+    dialogue.messages.forEach(message => {
+      const newMessage = {
         ...message,
         isRead: false,
-      }));
-
-      if (existingChatIndex === -1) {
-        return [
-          ...prevChats,
-          {
-            key: opponentId,
-            messages: newMessages,
-          },
-        ];
-      } else {
-        const updatedChats = [...prevChats];
-        updatedChats[existingChatIndex] = {
-          ...updatedChats[existingChatIndex],
-          messages: [
-            ...updatedChats[existingChatIndex].messages,
-            ...newMessages,
-          ],
-        };
-        return updatedChats;
-      }
+      };
+      updateChatData(opponentId, newMessage);
     });
   };
 
@@ -211,6 +174,7 @@ export function FlowProvider({ children }) {
 
     const nextStepData =
       chapters[currStepData.next.id][currStepData.next.index];
+    console.log('moveNextStep:', nextStepData);
 
     switch (nextStepData.type) {
       case 'monologue':
@@ -220,6 +184,7 @@ export function FlowProvider({ children }) {
         startChatFromOpponent(nextStepData.data);
         break;
       case 'chatFromMe':
+        console.log('call', nextStepData.data);
         startChatFromMe();
         break;
       default:
@@ -237,17 +202,16 @@ export function FlowProvider({ children }) {
     characters,
     currStepKey,
     currStepData,
-    unReadChats,
-    readChats,
+    chatData,
     setCurrStepKey,
     setCharacters,
     moveNextStep,
     turnToChatAvailable,
     getChatAvailableCharacters,
-    getReadChatMessagesByOpponentId,
+    getChatsByOpponentId,
     markMessagesAsRead,
-    setUnReadToRead,
-    turnToMessagesAsRead,
+    turnAllMessagesAsRead,
+    updateChatData,
   };
 
   return <FlowContext.Provider value={value}>{children}</FlowContext.Provider>;

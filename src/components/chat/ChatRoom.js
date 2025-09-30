@@ -5,34 +5,43 @@ import ChatHeader from './ChatHeader';
 import { useFlowManager } from '../../contexts/FlowContext';
 
 const NEW_MESSAGE_DELAY = 500;
+const TYPING_DELAY = 50;
+const INITIAL_INPUT_MESSAGE = { id: 0, message: '', isSentFromMe: true };
 
-export default function ChatRoom({
-  opponentId,
-  // displayMessages,
-  onBack,
-  onSendMessage,
-}) {
-  const { readChats, moveNextStep, turnToMessagesAsRead } = useFlowManager();
+export default function ChatRoom({ opponentId, onBack }) {
+  const {
+    currStepData,
+    chatData,
+    moveNextStep,
+    turnAllMessagesAsRead,
+    updateChatData,
+  } = useFlowManager();
 
-  const [inputMessage, setInputMessage] = useState('');
-  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
-  const [isWaitingForInput, setIsWaitingForInput] = useState(false);
-  const [isTyping, setIsTyping] = useState(true);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const timerRef = useRef(null);
 
+  const [inputMessageData, setInputMessageData] = useState(
+    INITIAL_INPUT_MESSAGE
+  );
+  const [isOpponentTyping, setIsOpponentTyping] = useState(true);
   const [visibleCount, setVisibleCount] = useState(0);
   const [displayMessages, setDisplayMessages] = useState([]);
-  const timerRef = useRef(null);
+  const [isSendButtonDisabled, setIsSendButtonDisabled] = useState(true);
 
   const { instantItems, delayedItems } = useMemo(() => {
     const instant = [];
     const delayed = [];
+    let hasStartedDelay = false;
 
     for (const message of displayMessages) {
-      if (message.isRead) {
+      if (message.isRead && !hasStartedDelay) {
         instant.push(message);
       } else {
+        // NOTE: 내가 보낸 메시지 순서 관리를 위해 아래와 같이 처리(한번 딜레이에 넣기 시작하면 그 이후를 전부 딜레이에 넣음)
+        if (!hasStartedDelay) {
+          hasStartedDelay = true;
+        }
         delayed.push(message);
       }
     }
@@ -45,15 +54,9 @@ export default function ChatRoom({
   };
 
   const handleSend = () => {
-    if (inputMessage.trim()) {
-      onSendMessage(opponentId, inputMessage);
-      setInputMessage('');
-      setIsWaitingForInput(false);
-      // 메시지 전송 후 다음 메시지로 진행
-      setTimeout(() => {
-        setCurrentMessageIndex(prev => prev + 1);
-      }, 1000);
-    }
+    updateChatData(opponentId, inputMessageData);
+    setInputMessageData(INITIAL_INPUT_MESSAGE);
+    setIsSendButtonDisabled(true);
   };
 
   const handleKeyPress = e => {
@@ -64,7 +67,32 @@ export default function ChatRoom({
   };
 
   useEffect(() => {
-    const chatMessages = readChats.find(
+    if (currStepData.type !== 'chatFromMe') return;
+    const inputPendingMessage = currStepData.data?.messages[0];
+    if (!inputPendingMessage) return;
+
+    const { message, ...rest } = inputPendingMessage;
+
+    let currentIndex = 0;
+
+    const typeInterval = setInterval(() => {
+      if (currentIndex < message.length) {
+        setInputMessageData({
+          ...rest,
+          message: message.slice(0, currentIndex + 1),
+        });
+        currentIndex++;
+      } else {
+        clearInterval(typeInterval);
+        setIsSendButtonDisabled(false);
+      }
+    }, TYPING_DELAY);
+
+    return () => clearInterval(typeInterval);
+  }, [currStepData]);
+
+  useEffect(() => {
+    const chatMessages = chatData.find(
       chat => chat.key === opponentId
     )?.messages;
     if (chatMessages && chatMessages.length > 0) {
@@ -88,19 +116,21 @@ export default function ChatRoom({
         return updatedMessages;
       });
     }
-  }, [readChats, opponentId]);
+  }, [chatData, opponentId, currStepData]);
 
   useEffect(() => {
     if (delayedItems.length === 0) {
-      setIsTyping(false);
+      setIsOpponentTyping(false);
       return;
     }
 
-    if (visibleCount >= delayedItems.length) {
-      setIsTyping(false);
+    if (visibleCount > delayedItems.length) {
+      setIsOpponentTyping(false);
+      moveNextStep();
       return;
     } else {
-      setIsTyping(true);
+      console.log('isOpponentTyping', visibleCount, delayedItems.length);
+      setIsOpponentTyping(true);
     }
 
     timerRef.current = setTimeout(() => {
@@ -112,7 +142,7 @@ export default function ChatRoom({
 
   useEffect(() => {
     return () => {
-      turnToMessagesAsRead(opponentId);
+      turnAllMessagesAsRead(opponentId);
     };
   }, []);
 
@@ -131,16 +161,26 @@ export default function ChatRoom({
       <div style={{ color: 'white' }} onClick={() => moveNextStep()}>
         moveNextStep
       </div>
+      <div
+        style={{ color: 'white' }}
+        onClick={() => console.log(instantItems, delayedItems, displayMessages)}
+      >
+        chatData
+      </div>
       <ChatContent>
         {instantItems.map(message => (
-          <MessageBubble key={message.id}>{message.message}</MessageBubble>
+          <MessageBubble key={message.id} isSentFromMe={message.isSentFromMe}>
+            {message.message}
+          </MessageBubble>
         ))}
 
         {delayedItems.slice(0, visibleCount).map(message => (
-          <MessageBubble key={message.id}>{message.message}</MessageBubble>
+          <MessageBubble key={message.id} isSentFromMe={message.isSentFromMe}>
+            {message.message}
+          </MessageBubble>
         ))}
 
-        {isTyping && (
+        {isOpponentTyping && (
           <TypingIndicator>
             <TypingDots>
               <span>.</span>
@@ -155,22 +195,15 @@ export default function ChatRoom({
       <MessageInput>
         <InputField
           ref={inputRef}
-          value={inputMessage}
-          onChange={e => setInputMessage(e.target.value)}
+          value={inputMessageData.message}
+          onChange={e => setInputMessageData(e.target.value)}
           onKeyDown={handleKeyPress}
-          placeholder={
-            isWaitingForInput
-              ? '답장을 입력하세요...'
-              : '메시지를 입력하세요...'
-          }
+          placeholder={'메시지 입력'}
           rows={1}
           spellCheck={false}
-          disabled={!isWaitingForInput}
+          disabled={!!inputMessageData}
         />
-        <SendButton
-          onClick={handleSend}
-          disabled={!inputMessage.trim() || !isWaitingForInput}
-        >
+        <SendButton onClick={handleSend} disabled={isSendButtonDisabled}>
           전송
         </SendButton>
       </MessageInput>
@@ -201,12 +234,12 @@ const ChatContent = styled.div`
 
 const MessageBubble = styled.div`
   background: ${props =>
-    props.isOwn ? colors.primary : colors.lightGraySecondary};
+    props.isSentFromMe ? colors.primary : colors.lightGraySecondary};
   color: ${colors.white};
   padding: 12px 16px;
   border-radius: 16px;
   max-width: 70%;
-  align-self: ${props => (props.isOwn ? 'flex-end' : 'flex-start')};
+  align-self: ${props => (props.isSentFromMe ? 'flex-end' : 'flex-start')};
   word-wrap: break-word;
 `;
 
@@ -235,11 +268,6 @@ const InputField = styled.textarea`
 
   &:focus {
     outline: none;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
   }
 
   &::placeholder {

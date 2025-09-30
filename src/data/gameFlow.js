@@ -1,5 +1,6 @@
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
+// NOTE: chatFromMe의 messages는, 상대의 메시지(api응답)에 형식을 맞추기 위해 이중배열로 작성하였으나, 추후 개선필요
 export const chapters = {
   opening: [
     {
@@ -55,6 +56,7 @@ export const chapters = {
           {
             id: generateId(),
             message: '……난 그냥 없어져도 아무도 모를 줄 알았어.',
+            isSentFromMe: true,
           },
         ],
       },
@@ -82,6 +84,7 @@ export const chapters = {
           {
             id: generateId(),
             message: '…그게 그렇게 중요했어?',
+            isSentFromMe: true,
           },
         ],
       },
@@ -167,7 +170,7 @@ export const chapters = {
       type: 'chatFromMe',
       data: {
         key: 'mother',
-        messages: [{ id: generateId(), message: '엄마..' }],
+        messages: [{ id: generateId(), message: '엄마..', isSentFromMe: true }],
       },
       next: { id: 'conversation_mother', index: 7 },
     },
@@ -222,7 +225,13 @@ export const chapters = {
       type: 'chatFromMe',
       data: {
         key: 'mother',
-        messages: [{ id: generateId(), message: '못 챙겨줘서 미안해요' }],
+        messages: [
+          {
+            id: generateId(),
+            message: '못 챙겨줘서 미안해요',
+            isSentFromMe: true,
+          },
+        ],
       },
       next: { id: 'conversation_colleague', index: 3 },
     },
@@ -245,7 +254,11 @@ export const chapters = {
       data: {
         key: 'colleague',
         messages: [
-          { id: generateId(), message: '그건 그냥… 습관처럼 한 거였는데.' },
+          {
+            id: generateId(),
+            message: '그건 그냥… 습관처럼 한 거였는데.',
+            isSentFromMe: true,
+          },
         ],
       },
       next: { id: 'conversation_colleague', index: 6 },
@@ -267,8 +280,16 @@ export const chapters = {
       data: {
         key: 'future_self',
         messages: [
-          { id: generateId(), message: '알아, 난 쓸모 없어.' },
-          { id: generateId(), message: '그냥 죽는게 나을걸.' },
+          {
+            id: generateId(),
+            message: '알아, 난 쓸모 없어.',
+            isSentFromMe: true,
+          },
+          {
+            id: generateId(),
+            message: '그냥 죽는게 나을걸.',
+            isSentFromMe: true,
+          },
         ],
       },
       next: { id: 'conversation_sister_3', index: 2 },
@@ -290,7 +311,11 @@ export const chapters = {
       data: {
         key: 'sister',
         messages: [
-          { id: generateId(), message: '…맞아. 근데 왜 갇힌 건 나야?' },
+          {
+            id: generateId(),
+            message: '…맞아. 근데 왜 갇힌 건 나야?',
+            isSentFromMe: true,
+          },
         ],
       },
       next: { id: 'realization', index: 2 },
@@ -320,7 +345,9 @@ export const chapters = {
       type: 'chatFromMe',
       data: {
         key: 'sister',
-        messages: [{ id: generateId(), message: '그럴수가' }],
+        messages: [
+          { id: generateId(), message: '그럴수가', isSentFromMe: true },
+        ],
       },
       next: { id: 'realization', index: 7 },
     },
@@ -339,9 +366,13 @@ export const chapters = {
       data: {
         key: 'future_self',
         messages: [
-          { id: generateId(), message: '…그래.' },
-          { id: generateId(), message: '이제 도망치지 않을게.' },
-          { id: generateId(), message: '나를 받아들일게.' },
+          { id: generateId(), message: '…그래.', isSentFromMe: true },
+          {
+            id: generateId(),
+            message: '이제 도망치지 않을게.',
+            isSentFromMe: true,
+          },
+          { id: generateId(), message: '나를 받아들일게.', isSentFromMe: true },
         ],
       },
       next: null,

@@ -173,7 +173,6 @@ export default function ChatContainer({
         <ChatRoom
           opponentId={selectedChatRoomId}
           onBack={() => setSelectedChatRoomId(null)}
-          onSendMessage={handleSendMessage}
         />
       ) : (
         <ChatList
