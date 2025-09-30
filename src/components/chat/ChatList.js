@@ -56,7 +56,6 @@ export default function ChatList({ onChatSelect }) {
                   </LastMessage>
                 </RoomInfo>
                 <RoomMeta>
-                  <RoomTime>{room.time}</RoomTime>
                   {!!unreadCount && <UnreadBadge>{unreadCount}</UnreadBadge>}
                 </RoomMeta>
               </ChatRoomItem>
@@ -151,35 +150,15 @@ const RoomMeta = styled.div`
   gap: 4px;
 `;
 
-const RoomTime = styled.div`
-  color: ${colors.lightGray};
-  font-size: 12px;
-`;
-
 const UnreadBadge = styled.div`
   background: ${colors.primary};
   color: ${colors.white};
   border-radius: 12px;
-  padding: 4px 8px;
-  font-size: 12px;
+  padding: 6px 10px;
+  font-size: 14px;
   font-weight: bold;
   min-width: 20px;
-  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  animation: pulse 2s infinite;
-
-  @keyframes pulse {
-    0% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.1);
-    }
-    100% {
-      transform: scale(1);
-    }
-  }
 `;
