@@ -1,20 +1,20 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { getCharacters } from '../services/api';
 import { useFlowManager } from '../contexts/FlowContext';
 
 export default function StartScreen() {
   const navigate = useNavigate();
 
-  const { setCurrStepKey } = useFlowManager();
+  const { setCurrStepKey, loadOpponentDialogue } = useFlowManager();
 
   const handleStartGame = async () => {
-    setCurrStepKey({ id: 'opening', index: 0 });
-    navigate('/game');
+    // todo: 로컬 스토리지 데이터 존재 여부에 따라 분기 처리 필요
 
-    // const charactersData = await getCharacters();
-    // setCharacters(charactersData);
+    setCurrStepKey({ id: 'opening', index: 0 });
+    loadOpponentDialogue({ key: 'sister', partNumber: 1 }, true);
+
+    navigate('/game');
   };
 
   return (

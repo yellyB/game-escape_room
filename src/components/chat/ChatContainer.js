@@ -7,7 +7,9 @@ export default function ChatContainer() {
   const { chatData, currStepData, characters } = useFlowManager();
 
   const [selectedChatRoomId, setSelectedChatRoomId] = useState(null);
-  const [shownToastKeys, setShownToastKeys] = useState(new Set());
+  const [shownToastKeys, setShownToastKeys] = useState(
+    new Set('friend-sister')
+  );
 
   const hasUnreadFromOtherChats = useMemo(() => {
     return chatData.some(chat => {
@@ -30,6 +32,7 @@ export default function ChatContainer() {
       currStepData.data.key !== selectedChatRoomId
     ) {
       const toastKey = `${currStepData.data.key}-${selectedChatRoomId}`;
+      console.log('toastKey:', toastKey, shownToastKeys);
 
       // todo: 로컬 스토리지 저장 시스템 구현하고 나면, 이 부분 어떻게 처리할지 고민하기
       if (!shownToastKeys.has(toastKey)) {

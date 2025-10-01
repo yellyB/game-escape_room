@@ -1,4 +1,4 @@
-const generateId = () => Math.random().toString(36).substr(2, 9);
+import { generateId } from '../utils/util';
 
 // NOTE: chatFromMe의 messages는, 상대의 메시지(api응답)에 형식을 맞추기 위해 이중배열로 작성하였으나, 추후 개선필요
 export const chapters = {
@@ -105,7 +105,7 @@ export const chapters = {
   conversation_sister_1: [
     {
       type: 'chatFromOpponent',
-      data: { key: 'sister', partNumber: 1 },
+      data: { key: 'sister', partNumber: 2 },
       next: { id: 'conversation_sister_1', index: 1 },
     },
     {
@@ -115,12 +115,12 @@ export const chapters = {
     },
     {
       type: 'chatFromOpponent',
-      data: { key: 'sister', partNumber: 2 },
+      data: { key: 'sister', partNumber: 3 },
       next: { id: 'conversation_sister_1', index: 3 },
     },
     {
       type: 'chatFromOpponent',
-      data: { key: 'sister', partNumber: 3 },
+      data: { key: 'sister', partNumber: 4 },
       next: { id: 'conversation_mother', index: 0 },
     },
   ],
@@ -193,7 +193,7 @@ export const chapters = {
   conversation_sister_2: [
     {
       type: 'chatFromOpponent',
-      data: { key: 'sister', partNumber: 3 },
+      data: { key: 'sister', partNumber: 5 },
       next: { id: 'conversation_sister_2', index: 1 },
     },
     {
@@ -203,7 +203,7 @@ export const chapters = {
     },
     {
       type: 'chatFromOpponent',
-      data: { key: 'sister', partNumber: 4 },
+      data: { key: 'sister', partNumber: 6 },
       next: { id: 'conversation_colleague', index: 0 },
     },
   ],
@@ -273,22 +273,17 @@ export const chapters = {
   conversation_sister_3: [
     {
       type: 'chatFromOpponent',
-      data: { key: 'sister', partNumber: 5 },
+      data: { key: 'sister', partNumber: 7 },
       next: { id: 'conversation_sister_3', index: 1 },
     },
     {
       type: 'chatFromMe',
       data: {
-        key: 'future_self',
+        key: 'sister',
         messages: [
           {
             id: generateId(),
             message: '알아, 난 쓸모 없어.',
-            isSentFromMe: true,
-          },
-          {
-            id: generateId(),
-            message: '그냥 죽는게 나을걸.',
             isSentFromMe: true,
           },
         ],
@@ -296,15 +291,29 @@ export const chapters = {
       next: { id: 'conversation_sister_3', index: 2 },
     },
     {
+      type: 'chatFromMe',
+      data: {
+        key: 'sister',
+        messages: [
+          {
+            id: generateId(),
+            message: '그냥 죽는게 나을걸.',
+            isSentFromMe: true,
+          },
+        ],
+      },
+      next: { id: 'conversation_sister_3', index: 3 },
+    },
+    {
       type: 'chatFromOpponent',
-      data: { key: 'sister', partNumber: 6 },
+      data: { key: 'sister', partNumber: 8 },
       next: { id: 'realization', index: 0 },
     },
   ],
   realization: [
     {
       type: 'chatFromOpponent',
-      data: { key: 'sister', partNumber: 7 },
+      data: { key: 'sister', partNumber: 9 },
       next: { id: 'realization', index: 1 },
     },
     {
@@ -323,13 +332,13 @@ export const chapters = {
     },
     {
       type: 'chatFromOpponent',
-      data: { key: 'sister', partNumber: 8 },
+      data: { key: 'sister', partNumber: 10 },
       next: { id: 'realization', index: 3 },
     },
     // todo: 배경 이미지 전환
     {
       type: 'chatFromOpponent',
-      data: { key: 'sister', partNumber: 9 },
+      data: { key: 'sister', partNumber: 11 },
       next: { id: 'realization', index: 4 },
     },
     {
@@ -359,7 +368,7 @@ export const chapters = {
     },
     {
       type: 'chatFromOpponent',
-      data: { key: 'sister', partNumber: 10 },
+      data: { key: 'sister', partNumber: 12 },
       next: { id: 'realization', index: 9 },
     },
     {

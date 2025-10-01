@@ -32,8 +32,8 @@ const INITIAL_CHARACTERS = [
   {
     id: 'sister',
     name: '여동생',
-    isChatAvailable: true,
-    lastChatDate: new Date(),
+    isChatAvailable: false,
+    lastChatDate: null,
   },
   {
     id: 'future_self',
@@ -149,16 +149,13 @@ export function FlowProvider({ children }) {
     });
   };
 
-  const startMonologue = () => {
-    console.log('=============1:', characters);
-  };
-
-  const startChatFromOpponent = async data => {
+  const loadOpponentDialogue = async (data, isRead = false) => {
     const { key: opponentId, partNumber } = data;
-    console.log('=============2:', opponentId);
+
     if (!opponentId) return;
 
     const opponent = characters.find(char => char.id === opponentId);
+
     if (!opponent.isChatAvailable) {
       turnToChatAvailable(opponentId);
     }
@@ -171,14 +168,10 @@ export function FlowProvider({ children }) {
     dialogue.messages.forEach(message => {
       const newMessage = {
         ...message,
-        isRead: false,
+        isRead,
       };
       updateChatData(opponentId, newMessage);
     });
-  };
-
-  const startChatFromMe = () => {
-    console.log('=============3:');
   };
 
   const moveNextStep = () => {
@@ -186,18 +179,14 @@ export function FlowProvider({ children }) {
 
     const nextStepData =
       chapters[currStepData.next.id][currStepData.next.index];
-    console.log('moveNextStep:', nextStepData);
 
     switch (nextStepData.type) {
       case 'monologue':
-        startMonologue();
         break;
       case 'chatFromOpponent':
-        startChatFromOpponent(nextStepData.data);
+        loadOpponentDialogue(nextStepData.data);
         break;
       case 'chatFromMe':
-        console.log('call', nextStepData.data);
-        startChatFromMe();
         break;
       default:
         break;
@@ -224,6 +213,7 @@ export function FlowProvider({ children }) {
     markMessagesAsRead,
     turnAllMessagesAsRead,
     updateChatData,
+    loadOpponentDialogue,
   };
 
   return <FlowContext.Provider value={value}>{children}</FlowContext.Provider>;

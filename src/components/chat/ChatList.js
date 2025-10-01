@@ -41,7 +41,9 @@ export default function ChatList({ onChatSelect }) {
           <div style={{ color: 'white' }} onClick={() => moveNextStep()}>
             moveNextStep
           </div>
-          <div style={{ color: 'white' }}>chatData</div>
+          <div style={{ color: 'white' }} onClick={() => console.log(chatData)}>
+            chatData
+          </div>
           {sortedChatAvailableCharacters.map(room => {
             const unreadCount = getUnreadCount[room.id] || 0;
             const lastMessage = getChatsByOpponentId(room.id)?.at(-1);

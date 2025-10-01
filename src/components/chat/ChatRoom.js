@@ -67,7 +67,12 @@ export default function ChatRoom({ opponentId, onBack }) {
   };
 
   useEffect(() => {
-    if (currStepData.type !== 'chatFromMe') return;
+    if (
+      currStepData.type !== 'chatFromMe' ||
+      currStepData.data.key !== opponentId
+    )
+      return;
+
     const inputPendingMessage = currStepData.data?.messages[0];
     if (!inputPendingMessage) return;
 
