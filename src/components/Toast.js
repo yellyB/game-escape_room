@@ -20,15 +20,15 @@ const fadeOut = keyframes`
   }
 `;
 
-const blink = keyframes`
+const pulse = keyframes`
   0% {
-    background: ${colors.lightGray};
+    opacity: 0.5;
   }
   50% {
-    background: ${colors.darkGray};
+    opacity: 1;
   }
   100% {
-    background: ${colors.lightGray};
+    opacity: 0.5;
   }
 `;
 
@@ -43,25 +43,19 @@ const ToastContainer = styled.div`
 `;
 
 const ToastMessage = styled.div`
-  background: ${colors.darkGray};
   color: ${colors.white};
-  padding: 14px 28px;
-  border-radius: 16px;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 500;
   text-align: center;
+  background: ${colors.darkGray};
+  padding: 15px 30px;
+  border-radius: 24px;
+  border: 2px solid ${colors.point};
   box-shadow:
     0 12px 32px rgba(0, 0, 0, 0.6),
     0 0 0 3px ${colors.point},
     0 0 20px rgba(255, 152, 0, 0.3);
-  border: 2px solid ${colors.point};
-  max-width: 400px;
-  word-wrap: break-word;
-  position: relative;
-  overflow: hidden;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  letter-spacing: 0.5px;
-  animation: ${blink} 0.8s infinite;
+  animation: ${pulse} 2s infinite;
 `;
 
 export default function Toast({ message, isVisible }) {
