@@ -1,8 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { FlowProvider } from './contexts/FlowContext';
+import { ToastProvider } from './contexts/ToastContext';
 import StartScreen from './components/StartScreen';
 import GameContainer from './components/GameContainer';
+import './utils/toast';
 import './App.css';
 
 function AppContent() {
@@ -17,9 +19,11 @@ function AppContent() {
 function App() {
   return (
     <FlowProvider>
-      <Router>
-        <AppContent />
-      </Router>
+      <ToastProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </ToastProvider>
     </FlowProvider>
   );
 }

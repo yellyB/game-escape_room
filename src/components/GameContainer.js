@@ -54,6 +54,13 @@ export default function GameContainer() {
     }
   };
 
+  // 토스트 테스트 함수
+  const testToast = () => {
+    if (typeof window !== 'undefined' && window.message) {
+      window.message('토스트 메시지 테스트입니다!');
+    }
+  };
+
   // 딜레이 시작
   const startDelay = useCallback(callback => {
     setIsDelayActive(true);
@@ -286,6 +293,8 @@ export default function GameContainer() {
       {currStepData.type === 'monologue' && (
         <Monologue texts={currStepData.data} onEnd={handleMonologueEnd} />
       )}
+      {/* 토스트 테스트 버튼 (개발용) */}
+      <TestToastButton onClick={testToast}>토스트 테스트</TestToastButton>
     </GameContainerWrapper>
   );
 }
@@ -333,5 +342,32 @@ const PendingChatMessage = styled.div`
     100% {
       opacity: 0.7;
     }
+  }
+`;
+
+const TestToastButton = styled.button`
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 1000;
+  background: rgba(76, 175, 80, 0.9);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(76, 175, 80, 1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 `;
