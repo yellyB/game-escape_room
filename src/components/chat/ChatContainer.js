@@ -1,13 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useFlowManager } from '../../contexts/FlowContext';
 import ChatList from './ChatList';
 import ChatRoom from './ChatRoom';
 
 export default function ChatContainer() {
-  const { currStepData } = useFlowManager();
+  const { chatData, currStepData } = useFlowManager();
 
   const [selectedChatRoomId, setSelectedChatRoomId] = useState(null);
   const [shownToastKeys, setShownToastKeys] = useState(new Set());
+
+  const hasUnreadMessagesExceptCurrChat = useMemo(() => {
+    return chatData.some(chat => {
+      if (chat.key !== selectedChatRoomId) {
+        return chat.messages.some(message => !message.isRead);
+      }
+      return false;
+    });
+  }, [chatData, selectedChatRoomId]);
 
   const handleChatSelect = async opponentId => {
     setSelectedChatRoomId(opponentId);
@@ -15,6 +24,7 @@ export default function ChatContainer() {
 
   useEffect(() => {
     if (
+      hasUnreadMessagesExceptCurrChat &&
       !!selectedChatRoomId &&
       currStepData.type === 'chatFromOpponent' &&
       currStepData.data.key !== selectedChatRoomId
@@ -27,7 +37,7 @@ export default function ChatContainer() {
         setShownToastKeys(prev => new Set([...prev, toastKey]));
       }
     }
-  }, [selectedChatRoomId, currStepData]);
+  }, [hasUnreadMessagesExceptCurrChat, selectedChatRoomId, currStepData]);
 
   return (
     <>

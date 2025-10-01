@@ -366,17 +366,33 @@ export const chapters = {
       type: 'chatFromMe',
       data: {
         key: 'future_self',
+        messages: [{ id: generateId(), message: '…그래.', isSentFromMe: true }],
+      },
+      next: { id: 'realization', index: 10 },
+    },
+    {
+      type: 'chatFromMe',
+      data: {
+        key: 'future_self',
         messages: [
-          { id: generateId(), message: '…그래.', isSentFromMe: true },
           {
             id: generateId(),
             message: '이제 도망치지 않을게.',
             isSentFromMe: true,
           },
+        ],
+      },
+      next: { id: 'realization', index: 11 },
+    },
+    {
+      type: 'chatFromMe',
+      data: {
+        key: 'future_self',
+        messages: [
           { id: generateId(), message: '나를 받아들일게.', isSentFromMe: true },
         ],
       },
-      next: null,
+      next: null, // TODO: 엔딩 구현
     },
   ],
 };

@@ -32,8 +32,8 @@ const INITIAL_CHARACTERS = [
   {
     id: 'sister',
     name: '여동생',
-    isChatAvailable: false,
-    lastChatDate: null,
+    isChatAvailable: true,
+    lastChatDate: new Date(),
   },
   {
     id: 'future_self',
