@@ -4,12 +4,12 @@ import ChatList from './ChatList';
 import ChatRoom from './ChatRoom';
 
 export default function ChatContainer() {
-  const { chatData, currStepData } = useFlowManager();
+  const { chatData, currStepData, characters } = useFlowManager();
 
   const [selectedChatRoomId, setSelectedChatRoomId] = useState(null);
   const [shownToastKeys, setShownToastKeys] = useState(new Set());
 
-  const hasUnreadMessagesExceptCurrChat = useMemo(() => {
+  const hasUnreadFromOtherChats = useMemo(() => {
     return chatData.some(chat => {
       if (chat.key !== selectedChatRoomId) {
         return chat.messages.some(message => !message.isRead);
@@ -24,7 +24,7 @@ export default function ChatContainer() {
 
   useEffect(() => {
     if (
-      hasUnreadMessagesExceptCurrChat &&
+      hasUnreadFromOtherChats &&
       !!selectedChatRoomId &&
       currStepData.type === 'chatFromOpponent' &&
       currStepData.data.key !== selectedChatRoomId
@@ -33,11 +33,15 @@ export default function ChatContainer() {
 
       // todo: 로컬 스토리지 저장 시스템 구현하고 나면, 이 부분 어떻게 처리할지 고민하기
       if (!shownToastKeys.has(toastKey)) {
-        window.message('새로운 메시지 도착');
+        const newMessageSender = characters.find(
+          char => char.id === currStepData.data.key
+        );
+
+        window.message(`${newMessageSender.name}의 새로운 메시지 도착`);
         setShownToastKeys(prev => new Set([...prev, toastKey]));
       }
     }
-  }, [hasUnreadMessagesExceptCurrChat, selectedChatRoomId, currStepData]);
+  }, [hasUnreadFromOtherChats, selectedChatRoomId, currStepData]);
 
   return (
     <>
