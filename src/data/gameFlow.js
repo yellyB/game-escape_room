@@ -46,7 +46,8 @@ export const chapters = {
     {
       type: 'chatFromOpponent',
       data: { key: 'friend', partNumber: 1 },
-      next: { id: 'conversation_friend', index: 1 },
+      // next: { id: 'conversation_friend', index: 1 },
+      next: { id: 'conversation_sister_1', index: 0 },
     },
     {
       type: 'chatFromMe',

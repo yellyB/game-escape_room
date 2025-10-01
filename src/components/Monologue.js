@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import styled from 'styled-components';
+import { useFlowManager } from '../contexts/FlowContext';
 import playerImage from '../images/player.png';
 import { colors } from '../styles/colors';
 
-export default function Monologue({ texts, onEnd }) {
+export default function Monologue() {
+  const { currStepData, moveNextStep } = useFlowManager();
   const [isDelaying, setIsDelaying] = useState(true);
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
+  const texts = currStepData.data;
 
   const resetMonologue = () => {
     setIsDelaying(true);
@@ -15,7 +18,7 @@ export default function Monologue({ texts, onEnd }) {
   const handleMonologueClick = () => {
     if (currentTextIndex === texts.length - 1) {
       resetMonologue();
-      onEnd();
+      moveNextStep();
       return;
     }
 
