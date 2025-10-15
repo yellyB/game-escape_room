@@ -11,7 +11,8 @@ export const chapters = {
         '공기는 텅 비어 있고, 손끝엔 예전부터 사용하던 내 휴대폰 하나.',
       ],
       // next: { id: 'opening', index: 1 },
-      next: { id: 'conversation_friend', index: 0 },
+      // next: { id: 'conversation_friend', index: 0 },
+      next: { id: 'conversation_mother', index: 0 },
     },
     // {
     //   type: 'monologue',
@@ -46,8 +47,7 @@ export const chapters = {
     {
       type: 'chatFromOpponent',
       data: { key: 'friend', partNumber: 1 },
-      // next: { id: 'conversation_friend', index: 1 },
-      next: { id: 'conversation_sister_1', index: 0 },
+      next: { id: 'conversation_friend', index: 1 },
     },
     {
       type: 'chatFromMe',
@@ -136,9 +136,23 @@ export const chapters = {
       next: { id: 'conversation_mother', index: 2 },
     },
     {
+      type: 'chatFromMe',
+      data: {
+        key: 'mother',
+        messages: [
+          {
+            id: generateId(),
+            message: '엄마 난 아무것도 아닌 것 같아.',
+            isSentFromMe: true,
+          },
+        ],
+      },
+      next: { id: 'conversation_mother', index: 3 },
+    },
+    {
       type: 'chatFromOpponent',
       data: { key: 'mother', partNumber: 2 },
-      next: { id: 'conversation_mother', index: 3 },
+      next: { id: 'conversation_mother', index: 4 },
     },
     {
       type: 'monologue',
@@ -150,12 +164,12 @@ export const chapters = {
         '더, 더 열심히 하게 되었다.',
         '중간부터는 진짜 내가 그림그리는걸 좋아하는건지, 알수도 없게 되어버렸다.',
       ],
-      next: { id: 'conversation_mother', index: 4 },
+      next: { id: 'conversation_mother', index: 5 },
     },
     {
       type: 'chatFromOpponent',
       data: { key: 'mother', partNumber: 3 },
-      next: { id: 'conversation_mother', index: 5 },
+      next: { id: 'conversation_mother', index: 6 },
     },
     {
       type: 'monologue',
@@ -165,7 +179,7 @@ export const chapters = {
         '티 낼 수 없었어.',
         '매일 괜찮은 척 엄마를 속였어.',
       ],
-      next: { id: 'conversation_mother', index: 6 },
+      next: { id: 'conversation_mother', index: 7 },
     },
     {
       type: 'chatFromMe',
@@ -173,12 +187,12 @@ export const chapters = {
         key: 'mother',
         messages: [{ id: generateId(), message: '엄마..', isSentFromMe: true }],
       },
-      next: { id: 'conversation_mother', index: 7 },
+      next: { id: 'conversation_mother', index: 8 },
     },
     {
       type: 'chatFromOpponent',
       data: { key: 'mother', partNumber: 4 },
-      next: { id: 'conversation_mother', index: 8 },
+      next: { id: 'conversation_mother', index: 9 },
     },
     {
       type: 'monologue',
@@ -225,7 +239,7 @@ export const chapters = {
     {
       type: 'chatFromMe',
       data: {
-        key: 'mother',
+        key: 'colleague',
         messages: [
           {
             id: generateId(),
@@ -354,7 +368,7 @@ export const chapters = {
     {
       type: 'chatFromMe',
       data: {
-        key: 'sister',
+        key: 'future_self',
         messages: [
           { id: generateId(), message: '그럴수가', isSentFromMe: true },
         ],

@@ -161,22 +161,19 @@ export default function ChatRoom({ opponentId, onBack }) {
   return (
     <ChatRoomContainer>
       <ChatHeader title="채팅방" onBack={onBack} />
-
-      <div style={{ color: 'white' }} onClick={() => moveNextStep()}>
-        moveNextStep
-      </div>
-      <div
-        style={{ color: 'white' }}
-        onClick={() => console.log(instantItems, delayedItems, displayMessages)}
-      >
-        chatData
-      </div>
       <ChatContent>
         {instantItems.map(message => (
           <MessageBubble key={message.id} isSentFromMe={message.isSentFromMe}>
             {message.message}
           </MessageBubble>
         ))}
+
+        {instantItems.length > 0 && delayedItems.length > 0 && (
+          <ReadGuide>
+            <ReadGuideText>여기까지 읽었습니다</ReadGuideText>
+            <ReadGuideLine />
+          </ReadGuide>
+        )}
 
         {delayedItems.slice(0, visibleCount).map(message => (
           <MessageBubble key={message.id} isSentFromMe={message.isSentFromMe}>
@@ -342,4 +339,31 @@ const TypingDots = styled.div`
       opacity: 1;
     }
   }
+`;
+
+const ReadGuide = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 16px 0;
+  position: relative;
+`;
+
+const ReadGuideText = styled.span`
+  background: ${colors.darkGray};
+  color: ${colors.lightGray};
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  z-index: 1;
+`;
+
+const ReadGuideLine = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: ${colors.lightGraySecondary};
+  z-index: 0;
 `;
