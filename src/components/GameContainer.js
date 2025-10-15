@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import backgroundImage from '../images/background.png';
@@ -10,7 +10,7 @@ import BottomArea from './BottomArea';
 
 export default function GameContainer() {
   const navigate = useNavigate();
-  const { currStepData } = useFlowManager();
+  const { currStepData, isViaStartScreen } = useFlowManager();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
 
@@ -25,7 +25,11 @@ export default function GameContainer() {
     }
   };
 
-  // todo: 새로고침해버려서 유효한 데이터가 없으면 / 경로로 보낸다(=goBack)
+  useEffect(() => {
+    if (!isViaStartScreen) {
+      navigate('/');
+    }
+  }, [isViaStartScreen, navigate]);
 
   return (
     <GameContainerWrapper backgroundImage={backgroundImage}>

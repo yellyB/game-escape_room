@@ -49,6 +49,7 @@ export function FlowProvider({ children }) {
   const [currStepKey, setCurrStepKey] = useState(INITIAL_STEP_KEY);
   const [characters, setCharacters] = useState(INITIAL_CHARACTERS);
   const [chatData, setChatData] = useState([]);
+  const [isViaStartScreen, setIsViaStartScreen] = useState(false);
 
   const currStepData = useMemo(() => {
     return chapters[currStepKey.id][currStepKey.index];
@@ -211,6 +212,7 @@ export function FlowProvider({ children }) {
     currStepKey,
     currStepData,
     chatData,
+    isViaStartScreen,
     setCurrStepKey,
     setCharacters,
     moveNextStep,
@@ -221,6 +223,7 @@ export function FlowProvider({ children }) {
     turnAllMessagesAsRead,
     updateChatData,
     loadOpponentDialogue,
+    setIsViaStartScreen,
   };
 
   return <FlowContext.Provider value={value}>{children}</FlowContext.Provider>;

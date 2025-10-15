@@ -6,13 +6,15 @@ import { useFlowManager } from '../contexts/FlowContext';
 export default function StartScreen() {
   const navigate = useNavigate();
 
-  const { setCurrStepKey, loadOpponentDialogue } = useFlowManager();
+  const { setCurrStepKey, loadOpponentDialogue, setIsViaStartScreen } =
+    useFlowManager();
 
   const handleStartGame = async () => {
     // todo: 로컬 스토리지 데이터 존재 여부에 따라 분기 처리 필요
 
     setCurrStepKey({ id: 'opening', index: 0 });
     loadOpponentDialogue({ key: 'sister', partNumber: 1 }, true);
+    setIsViaStartScreen(true);
 
     navigate('/game');
   };
