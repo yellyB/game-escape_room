@@ -1,8 +1,26 @@
+import { useMemo, useState, useEffect } from 'react';
 import styled from 'styled-components';
 import phoneIcon from '../images/icon_phone.png';
 import { storageUtils } from '../utils/storage';
+import { useFlowManager } from '../contexts/FlowContext';
 
 export default function BottomArea({ onChatOpenClick }) {
+  const { chatData, currStepData } = useFlowManager();
+  const [isAlerting, setIsAlerting] = useState(false);
+
+  const hasAnyUnreadMessages = useMemo(() => {
+    return chatData.some(g => g.messages.some(m => !m.isRead));
+  }, [chatData]);
+
+  // 최초 한번만 진동하도록 처리
+  useEffect(() => {
+    if (hasAnyUnreadMessages && currStepData.type === 'chatFromOpponent') {
+      setIsAlerting(true);
+    } else {
+      setIsAlerting(false);
+    }
+  }, [currStepData.type, hasAnyUnreadMessages, isAlerting]);
+
   // 로컬 스토리지 데이터 삭제 함수
   const clearLocalStorageData = () => {
     try {
@@ -91,7 +109,15 @@ export default function BottomArea({ onChatOpenClick }) {
 
   return (
     <Container>
-      <PhoneIcon src={phoneIcon} alt="Phone Icon" onClick={onChatOpenClick} />
+      <PhoneContainer>
+        <PhoneIcon
+          src={phoneIcon}
+          alt="Phone Icon"
+          onClick={onChatOpenClick}
+          hasShaken={isAlerting}
+        />
+        {hasAnyUnreadMessages && <NotificationDot />}
+      </PhoneContainer>
       <ResetButton onClick={handleResetGame}>🔄</ResetButton>
     </Container>
   );
@@ -110,29 +136,84 @@ const Container = styled.div`
   border-top: 1px solid #333;
 `;
 
+const PhoneContainer = styled.div`
+  position: relative;
+  display: inline-block;
+`;
+
 const PhoneIcon = styled.img`
   width: 40px;
   cursor: pointer;
-  transition: opacity 0.3s;
+  transition: all 0.3s ease;
+  animation: ${props =>
+    props.hasShaken ? 'phoneShake 0.8s ease-in-out' : 'none'};
 
   &:hover {
     opacity: 0.8;
+    transform: scale(1.1);
+  }
+
+  @keyframes phoneShake {
+    0% {
+      transform: translateX(0) scale(1);
+    }
+    10% {
+      transform: translateX(-3px) scale(1.1);
+    }
+    20% {
+      transform: translateX(3px) scale(1.1);
+    }
+    30% {
+      transform: translateX(-3px) scale(1.1);
+    }
+    40% {
+      transform: translateX(3px) scale(1.1);
+    }
+    50% {
+      transform: translateX(-2px) scale(1.05);
+    }
+    60% {
+      transform: translateX(2px) scale(1.05);
+    }
+    70% {
+      transform: translateX(-1px) scale(1.02);
+    }
+    80% {
+      transform: translateX(1px) scale(1.02);
+    }
+    90% {
+      transform: translateX(-0.5px) scale(1.01);
+    }
+    100% {
+      transform: translateX(0) scale(1);
+    }
   }
 `;
 
-const MonologueButton = styled.button`
-  width: 40px;
-  height: 40px;
-  background: #28a745;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 20px;
-  margin-left: 10px;
-  transition: opacity 0.3s;
+const NotificationDot = styled.div`
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  background-color: #ff4444;
+  border-radius: 50%;
+  border: 2px solid #000;
+  animation: pulse 1.5s infinite;
 
-  &:hover {
-    opacity: 0.8;
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.2);
+      opacity: 0.7;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
   }
 `;
 
