@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useFlowManager } from '../../contexts/FlowContext';
 import { colors } from '../../styles/colors';
-import HexagonEscape from './HexagonEscape';
+import TrapSister from './TrapSister';
 
 export default function MiniGameManager() {
   const { currStepData, moveNextStep } = useFlowManager();
@@ -35,7 +35,7 @@ export default function MiniGameManager() {
       ) : (
         <MiniGameOverlay>
           {gameType === 'hexagon-escape' ? (
-            <HexagonEscape onWin={handleWin} />
+            <TrapSister onWin={handleWin} />
           ) : (
             <div style={{ color: 'white' }}>게임 종료</div>
           )}

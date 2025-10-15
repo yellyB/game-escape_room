@@ -117,7 +117,7 @@ function randomInitialBarricades(cells, count, excludeKey) {
   return new Set(pool.slice(0, Math.min(count, pool.length)));
 }
 
-export default function HexagonEscape({ onWin }) {
+export default function TrapSister({ onWin }) {
   const radius = 7; // fixed densest map
   const size = 28; // fixed zoom
 
@@ -235,8 +235,8 @@ export default function HexagonEscape({ onWin }) {
 
   // ===== Derived UI texts by state =====
   const statusText = useMemo(() => {
-    if (gameState === GAME.LOSE) return '⚠️ 놓쳐버렸다! 재도전?';
-    if (gameState === GAME.WIN) return '🎉 잡았다! 당신의 승리!';
+    if (gameState === GAME.LOSE) return '놓쳐버렸다! 재도전?';
+    if (gameState === GAME.WIN) return '잡았다! 당신의 승리!';
     // playing
     if (lockInput || !playerTurn) return '상대의 턴: 여동생 도망 중…';
     return '당신의 차례: 막을 칸을 선택하세요';
@@ -246,6 +246,7 @@ export default function HexagonEscape({ onWin }) {
     <Page>
       <Header>
         <Title>여동생 가두기</Title>
+        <div onClick={onWin}>pass</div>
         <Controls>
           <Button onClick={reset}>재시도</Button>
         </Controls>
