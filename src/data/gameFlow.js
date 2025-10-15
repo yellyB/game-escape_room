@@ -10,38 +10,43 @@ export const chapters = {
         '눈을 뜨니 낯선 방. 창문도, 문도 없다.',
         '공기는 텅 비어 있고, 손끝엔 예전부터 사용하던 내 휴대폰 하나.',
       ],
-      // next: { id: 'opening', index: 1 },
+      next: { id: 'opening', index: 1 },
       // next: { id: 'conversation_friend', index: 0 },
-      next: { id: 'conversation_mother', index: 0 },
+      // next: { id: 'conversation_mother', index: 0 },
     },
-    // {
-    //   type: 'monologue',
-    //   data: ['기억을 더듬어보니…'],
-    //   next: { id: 'opening', index: 2 },
-    // },
-    // {
-    //   type: 'monologue',
-    //   data: [
-    //     '나는 여동생이 너무 미웠다.',
-    //     '행복하던 그 모습이 꼴 보기 싫어서,',
-    //     '이 방에 가둬버리려고 했다.',
-    //   ],
-    //   next: { id: 'opening', index: 3 },
-    // },
-    // {
-    //   type: 'monologue',
-    //   data: [
-    //     '그런데 눈을 떠보니',
-    //     '갇힌 건 내가 되어 있었다.',
-    //     '어떻게 된 거지?',
-    //   ],
-    //   next: { id: 'opening', index: 4 },
-    // },
-    // {
-    //   type: 'monologue',
-    //   data: ['……일단, 나가야 한다.'],
-    //   next: { id: 'conversation_friend', index: 0 },
-    // },
+    {
+      type: 'monologue',
+      data: ['기억을 더듬어보니…'],
+      next: { id: 'opening', index: 2 },
+    },
+    {
+      type: 'monologue',
+      data: [
+        '나는 여동생이 너무 미웠다.',
+        '행복하던 그 모습이 꼴 보기 싫어서,',
+        '이 방에 가둬버리려고 했다.',
+      ],
+      next: { id: 'opening', index: 3 },
+    },
+    {
+      type: 'miniGame',
+      data: { type: 'hexagon-escape' },
+      next: { id: 'opening', index: 4 },
+    },
+    {
+      type: 'monologue',
+      data: [
+        '그런데 눈을 떠보니',
+        '갇힌 건 내가 되어 있었다.',
+        '어떻게 된 거지?',
+      ],
+      next: { id: 'opening', index: 5 },
+    },
+    {
+      type: 'monologue',
+      data: ['……일단, 나가야 한다.'],
+      next: { id: 'conversation_friend', index: 0 },
+    },
   ],
   conversation_friend: [
     {

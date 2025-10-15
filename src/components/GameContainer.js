@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import backgroundImage from '../images/background.png';
 import ChatContainer from './chat/ChatContainer';
 import { useFlowManager } from '../contexts/FlowContext';
 import Monologue from './Monologue';
+import MiniGame from './miniGame/MiniGameManager';
 import BottomArea from './BottomArea';
 
 export default function GameContainer() {
+  const navigate = useNavigate();
   const { currStepData } = useFlowManager();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -22,11 +25,14 @@ export default function GameContainer() {
     }
   };
 
+  // todo: 새로고침해버려서 유효한 데이터가 없으면 / 경로로 보낸다(=goBack)
+
   return (
     <GameContainerWrapper backgroundImage={backgroundImage}>
       <BottomArea onChatOpenClick={handlePhoneClick} />
       {isChatOpen && <ChatContainer />}
       {currStepData.type === 'monologue' && <Monologue />}
+      {currStepData.type === 'miniGame' && <MiniGame />}
       {/* 토스트 테스트 버튼 (개발용) */}
       <TestToastButton onClick={testToast}>토스트 테스트</TestToastButton>
     </GameContainerWrapper>

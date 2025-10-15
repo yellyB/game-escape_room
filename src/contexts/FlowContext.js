@@ -174,6 +174,10 @@ export function FlowProvider({ children }) {
     });
   };
 
+  const handleMiniGame = data => {
+    console.log('handleMiniGame:', data);
+  };
+
   const moveNextStep = () => {
     setCurrStepKey(currStepData.next);
 
@@ -187,6 +191,9 @@ export function FlowProvider({ children }) {
         loadOpponentDialogue(nextStepData.data);
         break;
       case 'chatFromMe':
+        break;
+      case 'miniGame':
+        handleMiniGame(nextStepData.data);
         break;
       default:
         break;
