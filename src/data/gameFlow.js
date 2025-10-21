@@ -30,7 +30,7 @@ export const chapters = {
     },
     {
       type: 'miniGame',
-      data: { type: 'hexagon-escape' },
+      data: { type: 'trap-sister' },
       next: { id: 'opening', index: 4 },
     },
     {
@@ -100,6 +100,11 @@ export const chapters = {
       type: 'chatFromOpponent',
       data: { key: 'friend', partNumber: 3 },
       next: { id: 'conversation_friend', index: 6 },
+    },
+    {
+      type: 'miniGame',
+      data: { type: 'arrow-pump' },
+      next: { id: 'conversation_friend', index: 7 },
     },
     {
       type: 'chatFromOpponent',

@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { useFlowManager } from '../../contexts/FlowContext';
 import { colors } from '../../styles/colors';
 import TrapSister from './TrapSister';
+import ArrowPump from './ArrowPump';
 
 export default function MiniGameManager() {
   const { currStepData, moveNextStep } = useFlowManager();
@@ -34,11 +35,8 @@ export default function MiniGameManager() {
         </DelayOverlay>
       ) : (
         <MiniGameOverlay>
-          {gameType === 'hexagon-escape' ? (
-            <TrapSister onWin={handleWin} />
-          ) : (
-            <div style={{ color: 'white' }}>게임 종료</div>
-          )}
+          {gameType === 'trap-sister' && <TrapSister onWin={handleWin} />}
+          {gameType === 'arrow-pump' && <ArrowPump onWin={handleWin} />}
         </MiniGameOverlay>
       )}
     </>
